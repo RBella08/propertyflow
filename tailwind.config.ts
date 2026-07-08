@@ -1,70 +1,89 @@
-import type { Config } from "tailwindcss";
-import typography from "@tailwindcss/typography";
-import forms from "@tailwindcss/forms";
-import animate from "tailwindcss-animate";
+import type { Config } from 'tailwindcss';
+import typography from '@tailwindcss/typography';
+import forms from '@tailwindcss/forms';
+import animate from 'tailwindcss-animate';
 
-const config: Config = {
-  darkMode: ["class"],
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+export default {
+  darkMode: ['class'],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     container: {
       center: true,
-      padding: "1.5rem",
+      padding: '1.5rem',
       screens: {
-        "2xl": "1440px",
+        sm: '640px',
+        md: '768px',
+        lg: '1024px',
+        xl: '1280px',
+        '2xl': '1440px',
       },
     },
     extend: {
       colors: {
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
         primary: {
-          DEFAULT: "#2563EB",
-          foreground: "#FFFFFF",
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
-          DEFAULT: "#0F172A",
-          foreground: "#FFFFFF",
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
         },
-        success: {
-          DEFAULT: "#16A34A",
-          foreground: "#FFFFFF",
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
         },
-        warning: {
-          DEFAULT: "#F59E0B",
-          foreground: "#0F172A",
+        success: 'hsl(var(--success))',
+        warning: 'hsl(var(--warning))',
+        info: 'hsl(var(--info))',
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
         },
-        danger: {
-          DEFAULT: "#DC2626",
-          foreground: "#FFFFFF",
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
         },
-        info: {
-          DEFAULT: "#0EA5E9",
-          foreground: "#FFFFFF",
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
         },
-      },
-      borderRadius: {
-        sm: "6px",
-        md: "10px",
-        lg: "16px",
-        xl: "20px",
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+        },
       },
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        h1: ['48px', { lineHeight: '1.2', fontWeight: '700' }],
+        h2: ['36px', { lineHeight: '1.25', fontWeight: '700' }],
+        h3: ['30px', { lineHeight: '1.3', fontWeight: '600' }],
+        h4: ['24px', { lineHeight: '1.35', fontWeight: '600' }],
+        h5: ['20px', { lineHeight: '1.4', fontWeight: '600' }],
+        h6: ['18px', { lineHeight: '1.4', fontWeight: '600' }],
+        body: ['16px', { lineHeight: '1.5', fontWeight: '400' }],
+        small: ['14px', { lineHeight: '1.5', fontWeight: '400' }],
+        caption: ['12px', { lineHeight: '1.4', fontWeight: '400' }],
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+        card: '12px',
+        button: '8px',
       },
       boxShadow: {
-        card: "0 1px 2px rgb(0 0 0 / 0.05)",
-        dropdown: "0 4px 6px rgb(0 0 0 / 0.1)",
-        modal: "0 20px 25px rgb(0 0 0 / 0.1)",
+        card: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+        dropdown: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+        modal: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
       },
     },
   },
-  plugins: [
-    typography,
-    forms,
-    animate,
-  ],
-};
-
-export default config;
+  plugins: [typography, forms, animate],
+} satisfies Config;
