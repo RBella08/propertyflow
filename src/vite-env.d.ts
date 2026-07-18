@@ -7,4 +7,6 @@ interface ImportMetaEnv {
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
+
+  readonly VITE_PAYSTACK_PUBLIC_KEY: string;
 }

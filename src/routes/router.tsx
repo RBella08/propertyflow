@@ -26,6 +26,9 @@ import { EditUnitPage } from '@/pages/landlord/EditUnitPage';
 import { LandlordLeasesPage } from '@/pages/landlord/LandlordLeasesPage';
 import { CreateLeasePage } from '@/pages/landlord/CreateLeasePage';
 import { LandlordDashboardPage } from '@/pages/landlord/LandlordDashboardPage';
+import { PayRentPage } from '@/pages/tenant/PayRentPage';
+import { PaymentsPage } from '@/pages/tenant/PaymentsPage';
+import { ReceiptsPage } from '@/pages/tenant/ReceiptsPage';
 import { TenantDashboardPage } from '@/pages/tenant/TenantDashboardPage';
 import { PropertyListingsPage } from '@/pages/public/PropertyListingsPage';
 import { PropertyDetailsPage } from '@/pages/public/PropertyDetailsPage';
@@ -114,9 +117,30 @@ export const router = createBrowserRouter([
         [
           { path: 'tenant/dashboard', title: 'Tenant Dashboard' },
           { path: 'tenant/lease', title: 'Lease' },
-          { path: 'tenant/payments', title: 'Payments' },
-          { path: 'tenant/payments/pay', title: 'Pay Rent' },
-          { path: 'tenant/receipts', title: 'Receipts' },
+          {
+            path: 'tenant/payments',
+            element: (
+              <ProtectedRoute allowedRoles={['tenant']}>
+                <PaymentsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'tenant/payments/pay',
+            element: (
+              <ProtectedRoute allowedRoles={['tenant']}>
+                <PayRentPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'tenant/receipts',
+            element: (
+              <ProtectedRoute allowedRoles={['tenant']}>
+                <ReceiptsPage />
+              </ProtectedRoute>
+            ),
+          },
           { path: 'tenant/maintenance', title: 'Maintenance' },
           { path: 'tenant/maintenance/new', title: 'Create Maintenance Request' },
           { path: 'tenant/maintenance/:id', title: 'Maintenance Details' },

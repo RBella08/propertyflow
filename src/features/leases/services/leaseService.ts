@@ -64,28 +64,10 @@ export async function findTenantByEmail(email: string): Promise<TenantLookupResu
     .maybeSingle();
 
   if (tenantError) throw tenantError;
-
-  // Self-heal: this profile is a tenant but has no tenants row yet
-  // (legacy account, or the signup trigger ran before this fix existed).
-  // Create it now instead of blocking lease creation.
   if (!tenant) {
-    const { data: created, error: createError } = await supabase
-      .from('tenants')
-      .insert({ profile_id: profile.id })
-      .select('id')
-      .single();
-
-    if (createError) {
-      throw new Error(
-        `Found the account, but couldn't create its tenant profile: ${createError.message}`
-      );
-    }
-
-    return {
-      tenantId: created.id,
-      fullName: profile.full_name ?? profile.email,
-      email: profile.email,
-    };
+    throw new Error(
+      'This tenant account has no tenant profile record. This should not normally happen — please contact support.'
+    );
   }
 
   return {
