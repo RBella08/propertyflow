@@ -9,6 +9,8 @@ export function useCreateUnit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['landlord-units'] });
       queryClient.invalidateQueries({ queryKey: ['landlord-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['property'] });
     },
   });
 }
@@ -21,6 +23,8 @@ export function useUpdateUnit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['landlord-units'] });
       queryClient.invalidateQueries({ queryKey: ['landlord-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['property'] });
     },
   });
 }

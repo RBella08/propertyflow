@@ -1,8 +1,13 @@
-import { Link } from 'react-router';
+import type { MouseEvent } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { Bed, MapPin, Heart } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/useAuth';
+import { useFavoriteIds, useToggleFavorite } from '@/features/favorites/hooks/useFavorites';
 import type { PropertyListItem } from '../services/propertyService';
 
 function formatNaira(amount: number) {
@@ -18,6 +23,33 @@ interface PropertyCardProps {
 }
 
 export function PropertyCard({ property }: PropertyCardProps) {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { data: favoriteIds } = useFavoriteIds();
+  const toggleFavorite = useToggleFavorite();
+
+  const isFavorited = favoriteIds?.includes(property.id) ?? false;
+
+  const handleToggleFavorite = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!isAuthenticated) {
+      toast.info('Log in to save properties');
+      navigate('/login');
+      return;
+    }
+
+    toggleFavorite.mutate(
+      { propertyId: property.id, isFavorited },
+      {
+        onSuccess: () =>
+          toast.success(isFavorited ? 'Removed from favorites' : 'Saved to favorites'),
+        onError: () => toast.error('Could not update favorites'),
+      }
+    );
+  };
+
   const priceLabel =
     property.minRent && property.maxRent
       ? property.minRent === property.maxRent
@@ -46,13 +78,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
             No image
           </div>
         )}
-        {/* Favorite toggle is visual-only for now — wired to real state
-            in the dedicated Favorites feature step (FEATURES.md #7). */}
         <button
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 text-foreground shadow-card hover:text-destructive"
-          aria-label="Save property"
+          onClick={handleToggleFavorite}
+          disabled={toggleFavorite.isPending}
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 text-foreground shadow-card transition-colors hover:text-destructive"
+          aria-label={isFavorited ? 'Remove from favorites' : 'Save property'}
         >
-          <Heart className="h-4 w-4" />
+          <Heart className={cn('h-4 w-4', isFavorited && 'fill-destructive text-destructive')} />
         </button>
         {property.availableUnits > 0 ? (
           <Badge variant="success" className="absolute left-3 top-3">

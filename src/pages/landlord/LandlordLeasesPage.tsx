@@ -19,6 +19,15 @@ function formatNaira(amount: number) {
 
 export function LandlordLeasesPage() {
   const { data: leases, isLoading } = useLandlordLeases();
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'terminated'>('active');
+
+  const filteredLeases = leases?.filter((l) =>
+    statusFilter === 'all'
+      ? true
+      : statusFilter === 'active'
+        ? l.status !== 'terminated'
+        : l.status === 'terminated'
+  );
   const [renewTarget, setRenewTarget] = useState<{
     id: string;
     number: string;
@@ -40,6 +49,19 @@ export function LandlordLeasesPage() {
             <Plus className="mr-2 h-4 w-4" /> Create Lease
           </Link>
         </Button>
+        <div className="flex gap-2">
+          {(['active', 'terminated', 'all'] as const).map((status) => (
+            <Button
+              key={status}
+              size="sm"
+              variant={statusFilter === status ? 'default' : 'outline'}
+              onClick={() => setStatusFilter(status)}
+              className="capitalize"
+            >
+              {status}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {isLoading ? (
@@ -49,7 +71,7 @@ export function LandlordLeasesPage() {
         </div>
       ) : leases && leases.length > 0 ? (
         <div className="flex flex-col gap-3">
-          {leases.map((lease) => (
+          {filteredLeases?.map((lease) => (
             <Card key={lease.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
                 <div>

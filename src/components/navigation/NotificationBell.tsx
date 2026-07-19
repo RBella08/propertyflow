@@ -1,13 +1,12 @@
-import { Bell } from 'lucide-react';
 import { Link } from 'react-router';
+import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useNotifications } from '@/features/notifications/hooks/useNotifications';
 
-interface NotificationBellProps {
-  unreadCount?: number;
-}
+export function NotificationBell() {
+  const { unreadCount } = useNotifications();
 
-export function NotificationBell({ unreadCount = 0 }: NotificationBellProps) {
   return (
     <Button variant="ghost" size="icon" className="relative" asChild>
       <Link to="/notifications">

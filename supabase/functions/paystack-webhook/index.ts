@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { verifyPaystackTransaction, generateReceiptNumber } from '../_shared/paystack.ts';
 
 Deno.serve(async (req) => {
@@ -78,18 +78,63 @@ Deno.serve(async (req) => {
         .select('balance')
         .eq('id', invoiceId)
         .single();
+
       if (invoice) {
         const newBalance = Math.max(0, invoice.balance - amount);
+
         await supabase
           .from('invoices')
-          .update({ balance: newBalance, status: newBalance === 0 ? 'paid' : 'partial' })
+          .update({
+            balance: newBalance,
+            status: newBalance === 0 ? 'paid' : 'partial',
+          })
           .eq('id', invoiceId);
       }
+
       await supabase.from('receipts').insert({
         payment_id: payment.id,
         receipt_number: generateReceiptNumber(),
         issued_at: new Date().toISOString(),
       });
+
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('profile_id')
+        .eq('id', tenantId)
+        .single();
+
+      if (tenant) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', tenant.profile_id)
+          .single();
+
+        const { error: notificationError } = await supabase.from('notifications').insert({
+          user_id: tenant.profile_id,
+          title: 'Payment successful',
+          message: `Your payment of ₦${amount.toLocaleString()} was received successfully.`,
+          type: 'payment_success',
+        });
+
+        if (notificationError) {
+          console.error('Webhook: failed to create notification:', notificationError.message);
+        }
+
+        if (profile?.email) {
+          try {
+            await supabase.functions.invoke('send-email', {
+              body: {
+                to: profile.email,
+                subject: 'Payment Received — PropertyFlow',
+                html: `<h2>Payment Received</h2><p>We've received your payment of <strong>₦${amount.toLocaleString()}</strong>. Thank you!</p>`,
+              },
+            });
+          } catch (emailError) {
+            console.error('Webhook: email sending failed:', emailError);
+          }
+        }
+      }
     }
   }
 

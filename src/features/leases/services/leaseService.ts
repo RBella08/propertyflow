@@ -107,6 +107,20 @@ export async function createLease(input: LeaseFormInput): Promise<void> {
     throw new Error('This unit is no longer available. Please choose another.');
   }
 
+  // One active lease per tenant, per FEATURES.md's stated business rule.
+  const { data: existingActiveLease, error: activeLeaseError } = await supabase
+    .from('leases')
+    .select('id')
+    .eq('tenant_id', input.tenantId)
+    .eq('status', 'active')
+    .maybeSingle();
+  if (activeLeaseError) throw activeLeaseError;
+  if (existingActiveLease) {
+    throw new Error(
+      'This tenant already has an active lease. Terminate it first before creating a new one.'
+    );
+  }
+
   const { data: lease, error: leaseError } = await supabase
     .from('leases')
     .insert({
@@ -193,7 +207,7 @@ export async function renewLease(leaseId: string, newEndDate: string): Promise<v
 export async function terminateLease(leaseId: string): Promise<void> {
   const { data: lease, error: leaseError } = await supabase
     .from('leases')
-    .select('unit_id')
+    .select('unit_id, tenant_id')
     .eq('id', leaseId)
     .single();
   if (leaseError) throw leaseError;
@@ -212,5 +226,27 @@ export async function terminateLease(leaseId: string): Promise<void> {
     throw new Error(
       'Lease terminated, but the unit status failed to update. Please update it manually.'
     );
+  }
+
+  // Notify the tenant — best-effort, doesn't block termination itself
+  // if the notification insert fails for any reason.
+  try {
+    const { data: tenant } = await supabase
+      .from('tenants')
+      .select('profile_id')
+      .eq('id', lease.tenant_id)
+      .single();
+
+    if (tenant) {
+      await supabase.from('notifications').insert({
+        user_id: tenant.profile_id,
+        title: 'Lease terminated',
+        message:
+          'Your lease has been terminated by your landlord. Contact them if you have questions.',
+        type: 'lease_expiry',
+      });
+    }
+  } catch (notifyError) {
+    console.error('Failed to notify tenant of lease termination:', notifyError);
   }
 }
