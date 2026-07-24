@@ -47,7 +47,7 @@ export function DashboardHeader() {
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />
-        <NotificationBell unreadCount={3} />
+        <NotificationBell />
         <UserMenu />
       </div>
     </header>
