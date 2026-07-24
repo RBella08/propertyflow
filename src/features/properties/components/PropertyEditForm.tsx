@@ -12,7 +12,17 @@ import { AmenitySelector } from './AmenitySelector';
 import { propertySchema, type PropertyFormInput } from '../schemas';
 import { useUpdateProperty } from '../hooks/usePropertyMutations';
 
-const PROPERTY_TYPES = ['apartment', 'house', 'duplex', 'bungalow', 'studio', 'office'];
+const PROPERTY_TYPES = [
+  'apartment',
+  'duplex',
+  'bungalow',
+  'studio',
+  'terrace',
+  'penthouse',
+  'mansion',
+  'self_contained',
+  'office',
+];
 
 interface PropertyEditFormProps {
   propertyId: string;

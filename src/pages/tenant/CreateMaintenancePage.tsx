@@ -12,7 +12,16 @@ import { maintenanceSchema, type MaintenanceFormInput } from '@/features/mainten
 import { useCreateMaintenanceRequest } from '@/features/maintenance/hooks/useMaintenanceMutations';
 import { MaintenanceImageUploader } from '@/features/maintenance/components/MaintenanceImageUploader';
 
-const CATEGORIES = ['plumbing', 'electrical', 'structural', 'appliance', 'pest_control', 'other'];
+const CATEGORIES = [
+  'plumbing',
+  'electrical',
+  'security',
+  'cleaning',
+  'water',
+  'internet',
+  'structural',
+  'other',
+];
 const PRIORITIES = ['low', 'medium', 'high', 'urgent'];
 
 export function CreateMaintenancePage() {

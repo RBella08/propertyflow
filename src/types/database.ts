@@ -69,15 +69,7 @@ export type Database = {
           user_agent?: string | null;
           user_id?: string | null;
         };
-        Relationships: [
-          {
-            foreignKeyName: 'audit_logs_user_id_fkey';
-            columns: ['user_id'];
-            isOneToOne: false;
-            referencedRelation: 'profiles';
-            referencedColumns: ['id'];
-          },
-        ];
+        Relationships: [];
       };
       cms_pages: {
         Row: {
@@ -491,6 +483,7 @@ export type Database = {
       maintenance_requests: {
         Row: {
           assigned_to: string | null;
+          assigned_vendor_id: string | null;
           category: Database['public']['Enums']['maintenance_category'];
           created_at: string | null;
           description: string;
@@ -507,6 +500,7 @@ export type Database = {
         };
         Insert: {
           assigned_to?: string | null;
+          assigned_vendor_id?: string | null;
           category: Database['public']['Enums']['maintenance_category'];
           created_at?: string | null;
           description: string;
@@ -523,6 +517,7 @@ export type Database = {
         };
         Update: {
           assigned_to?: string | null;
+          assigned_vendor_id?: string | null;
           category?: Database['public']['Enums']['maintenance_category'];
           created_at?: string | null;
           description?: string;
@@ -543,6 +538,13 @@ export type Database = {
             columns: ['assigned_to'];
             isOneToOne: false;
             referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'maintenance_requests_assigned_vendor_id_fkey';
+            columns: ['assigned_vendor_id'];
+            isOneToOne: false;
+            referencedRelation: 'vendors';
             referencedColumns: ['id'];
           },
           {
@@ -1270,6 +1272,57 @@ export type Database = {
           },
         ];
       };
+      vendors: {
+        Row: {
+          category: string;
+          created_at: string;
+          email: string | null;
+          id: string;
+          landlord_id: string;
+          name: string;
+          notes: string | null;
+          phone: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          category: string;
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          landlord_id: string;
+          name: string;
+          notes?: string | null;
+          phone?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          category?: string;
+          created_at?: string;
+          email?: string | null;
+          id?: string;
+          landlord_id?: string;
+          name?: string;
+          notes?: string | null;
+          phone?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'vendors_landlord_id_fkey';
+            columns: ['landlord_id'];
+            isOneToOne: false;
+            referencedRelation: 'landlord_dashboard_summary';
+            referencedColumns: ['landlord_id'];
+          },
+          {
+            foreignKeyName: 'vendors_landlord_id_fkey';
+            columns: ['landlord_id'];
+            isOneToOne: false;
+            referencedRelation: 'landlords';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
     };
     Views: {
       active_units: {
@@ -1487,6 +1540,7 @@ export type Database = {
       };
     };
     Functions: {
+      current_user_role: { Args: never; Returns: string };
       get_current_profile_id: { Args: never; Returns: string };
       is_admin: { Args: never; Returns: boolean };
       is_landlord: { Args: never; Returns: boolean };
@@ -1515,7 +1569,8 @@ export type Database = {
         | 'lease_expiry'
         | 'announcement'
         | 'welcome'
-        | 'invoice_created';
+        | 'invoice_created'
+        | 'lease_terminated';
       payment_gateway: 'paystack' | 'flutterwave' | 'bank_transfer' | 'cash';
       payment_status: 'pending' | 'processing' | 'successful' | 'failed' | 'refunded';
       property_status: 'active' | 'inactive' | 'draft' | 'archived';
@@ -1674,6 +1729,7 @@ export const Constants = {
         'announcement',
         'welcome',
         'invoice_created',
+        'lease_terminated',
       ],
       payment_gateway: ['paystack', 'flutterwave', 'bank_transfer', 'cash'],
       payment_status: ['pending', 'processing', 'successful', 'failed', 'refunded'],

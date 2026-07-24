@@ -10,6 +10,7 @@ export interface LandlordPropertyListItem {
   state: string;
   status: string;
   coverImage: string | null;
+  managerId: string | null;
   totalUnits: number;
 }
 
@@ -28,7 +29,7 @@ export async function getLandlordProperties(
 ): Promise<LandlordPropertyListItem[]> {
   const { data, error } = await supabase
     .from('properties')
-    .select('id, property_name, slug, city, state, status, cover_image, units(id)')
+    .select('id, property_name, slug, city, state, status, cover_image, manager_id, units(id)')
     .eq('landlord_id', landlordId)
     .order('created_at', { ascending: false });
 
@@ -42,8 +43,36 @@ export async function getLandlordProperties(
     state: row.state,
     status: row.status,
     coverImage: row.cover_image,
+    managerId: row.manager_id,
     totalUnits: row.units?.length ?? 0,
   }));
+}
+
+export async function findManagerByEmail(
+  email: string
+): Promise<{ profileId: string; fullName: string }> {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, role')
+    .eq('email', email.trim().toLowerCase())
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!profile) throw new Error('No account found with that email.');
+  if (profile.role !== 'manager') throw new Error('That account is not registered as a manager.');
+
+  return { profileId: profile.id, fullName: profile.full_name ?? profile.email };
+}
+
+export async function assignManagerToProperty(
+  propertyId: string,
+  managerProfileId: string | null
+): Promise<void> {
+  const { error } = await supabase
+    .from('properties')
+    .update({ manager_id: managerProfileId })
+    .eq('id', propertyId);
+  if (error) throw error;
 }
 
 async function generateUniqueSlug(propertyName: string): Promise<string> {
@@ -138,6 +167,80 @@ export async function createProperty(
   return propertyId;
 }
 
+export interface ManagerPropertyItem {
+  id: string;
+  propertyName: string;
+  slug: string;
+  city: string;
+  state: string;
+  status: string;
+  coverImage: string | null;
+  totalUnits: number;
+  occupiedUnits: number;
+}
+
+export async function getManagerProperties(profileId: string): Promise<ManagerPropertyItem[]> {
+  const { data, error } = await supabase
+    .from('properties')
+    .select('id, property_name, slug, city, state, status, cover_image, units(id, status)')
+    .eq('manager_id', profileId)
+    .order('property_name');
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    propertyName: row.property_name,
+    slug: row.slug,
+    city: row.city,
+    state: row.state,
+    status: row.status,
+    coverImage: row.cover_image,
+    totalUnits: row.units?.length ?? 0,
+    occupiedUnits: (row.units ?? []).filter((u: any) => u.status === 'occupied').length,
+  }));
+}
+
+export interface ManagerDashboardData {
+  totalProperties: number;
+  totalUnits: number;
+  occupiedUnits: number;
+  vacantUnits: number;
+  occupancyRate: number;
+  openMaintenanceCount: number;
+}
+
+export async function getManagerDashboardData(profileId: string): Promise<ManagerDashboardData> {
+  const { data: properties, error } = await supabase
+    .from('properties')
+    .select('id, units(status)')
+    .eq('manager_id', profileId);
+  if (error) throw error;
+
+  const propertyIds = (properties ?? []).map((p: any) => p.id);
+  const allUnits = (properties ?? []).flatMap((p: any) => p.units ?? []);
+  const occupiedUnits = allUnits.filter((u: any) => u.status === 'occupied').length;
+  const totalUnits = allUnits.length;
+
+  let openMaintenanceCount = 0;
+  if (propertyIds.length > 0) {
+    const { count } = await supabase
+      .from('maintenance_requests')
+      .select('id', { count: 'exact', head: true })
+      .in('property_id', propertyIds)
+      .in('status', ['submitted', 'assigned', 'in_progress']);
+    openMaintenanceCount = count ?? 0;
+  }
+
+  return {
+    totalProperties: propertyIds.length,
+    totalUnits,
+    occupiedUnits,
+    vacantUnits: totalUnits - occupiedUnits,
+    occupancyRate: totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0,
+    openMaintenanceCount,
+  };
+}
+
 export async function updateProperty(propertyId: string, input: PropertyFormInput): Promise<void> {
   const { error } = await supabase
     .from('properties')
@@ -181,6 +284,14 @@ export async function archiveProperty(propertyId: string): Promise<void> {
   const { error } = await supabase
     .from('properties')
     .update({ status: 'archived' })
+    .eq('id', propertyId);
+  if (error) throw error;
+}
+
+export async function unarchiveProperty(propertyId: string): Promise<void> {
+  const { error } = await supabase
+    .from('properties')
+    .update({ status: 'draft' })
     .eq('id', propertyId);
   if (error) throw error;
 }

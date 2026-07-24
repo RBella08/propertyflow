@@ -55,6 +55,41 @@ export async function getLandlordUnits(profileId: string): Promise<LandlordUnitI
   }));
 }
 
+export async function getManagerPropertyOptions(
+  profileId: string
+): Promise<LandlordPropertyOption[]> {
+  const { data, error } = await supabase
+    .from('properties')
+    .select('id, property_name')
+    .eq('manager_id', profileId)
+    .order('property_name');
+  if (error) throw error;
+  return (data ?? []).map((p) => ({ id: p.id, propertyName: p.property_name }));
+}
+
+export async function getManagerUnits(profileId: string): Promise<LandlordUnitItem[]> {
+  const { data, error } = await supabase
+    .from('units')
+    .select(
+      'id, property_id, unit_number, bedrooms, bathrooms, rent_amount, status, properties!inner(property_name, manager_id)'
+    )
+    .eq('properties.manager_id', profileId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    propertyId: row.property_id,
+    propertyName: row.properties.property_name,
+    unitNumber: row.unit_number,
+    bedrooms: row.bedrooms,
+    bathrooms: row.bathrooms,
+    rentAmount: row.rent_amount,
+    status: row.status,
+  }));
+}
+
 export async function getUnitById(unitId: string): Promise<UnitFormInput> {
   const { data, error } = await supabase
     .from('units')
@@ -66,10 +101,10 @@ export async function getUnitById(unitId: string): Promise<UnitFormInput> {
   return {
     propertyId: data.property_id,
     unitNumber: data.unit_number,
-    bedrooms: data.bedrooms,
-    bathrooms: data.bathrooms,
-    rentAmount: data.rent_amount,
-    status: data.status,
+    bedrooms: data.bedrooms ?? 0,
+    bathrooms: data.bathrooms ?? 0,
+    rentAmount: data.rent_amount ?? 0,
+    status: data.status ?? 'available',
   };
 }
 

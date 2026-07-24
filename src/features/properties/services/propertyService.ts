@@ -25,6 +25,29 @@ export interface PropertyListItem {
   availableUnits: number;
 }
 
+export interface PropertyBasicInfo {
+  propertyName: string;
+  city: string;
+  state: string;
+  coverImage: string | null;
+}
+
+export async function getPropertyBasicInfo(id: string): Promise<PropertyBasicInfo> {
+  const { data, error } = await supabase
+    .from('properties')
+    .select('property_name, city, state, cover_image')
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+
+  return {
+    propertyName: data.property_name,
+    city: data.city,
+    state: data.state,
+    coverImage: data.cover_image,
+  };
+}
+
 interface RawPropertyRow {
   id: string;
   slug: string;

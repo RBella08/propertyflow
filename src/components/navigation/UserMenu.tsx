@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router';
 import { LogOut, Settings, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { Heart } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -55,6 +56,11 @@ export function UserMenu() {
         <DropdownMenuItem asChild>
           <Link to="/settings" className="flex items-center gap-2">
             <Settings className="h-4 w-4" /> Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/favorites" className="flex items-center gap-2">
+            <Heart className="h-4 w-4" /> My Favorites
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />

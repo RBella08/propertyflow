@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/types/database';
@@ -14,6 +14,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -23,70 +24,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchProfile = useCallback(async (userId: string) => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('AuthProvider: failed to load profile ->', error.message);
+      setProfile(null);
+      setIsLoading(false);
+      return;
+    }
+
+    if (data.status === 'suspended') {
+      await supabase.auth.signOut();
+      setProfile(null);
+      setSession(null);
+      setIsLoading(false);
+      return;
+    }
+
+    setProfile(data);
+    setIsLoading(false);
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
-
-    async function fetchOrCreateProfile(user: User) {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!isMounted) return;
-
-      // PGRST116 = "no rows found" — this user has no profile row yet.
-      // This happens if the database trigger that should auto-create one
-      // on signup doesn't exist (or hasn't run yet). We self-heal by
-      // creating it here from the signup metadata instead of failing.
-      if (error && error.code === 'PGRST116') {
-        const meta = user.user_metadata as {
-          first_name?: string;
-          last_name?: string;
-          role?: UserRole;
-        };
-
-        const { data: created, error: createError } = await supabase
-          .from('profiles')
-          .insert({
-            user_id: user.id,
-            email: user.email ?? '',
-            first_name: meta.first_name ?? null,
-            last_name: meta.last_name ?? null,
-            full_name:
-              meta.first_name && meta.last_name ? `${meta.first_name} ${meta.last_name}` : null,
-            role: meta.role ?? 'tenant',
-            status: 'active',
-          })
-          .select()
-          .single();
-
-        if (!isMounted) return;
-
-        if (createError) {
-          console.error('AuthProvider: failed to self-heal profile ->', createError.message);
-          setProfile(null);
-        } else {
-          setProfile(created);
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      if (error) {
-        console.error('AuthProvider: failed to load profile ->', error.message);
-        setProfile(null);
-      } else {
-        setProfile(data);
-      }
-      setIsLoading(false);
-    }
 
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       if (!isMounted) return;
       setSession(currentSession);
       if (currentSession?.user) {
-        fetchOrCreateProfile(currentSession.user);
+        fetchProfile(currentSession.user.id);
       } else {
         setIsLoading(false);
       }
@@ -96,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       if (newSession?.user) {
         setIsLoading(true);
-        fetchOrCreateProfile(newSession.user);
+        fetchProfile(newSession.user.id);
       } else {
         setProfile(null);
         setIsLoading(false);
@@ -107,20 +78,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       authListener.subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchProfile]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
   };
+
+  const refreshProfile = useCallback(async () => {
+    if (session?.user) {
+      await fetchProfile(session.user.id);
+    }
+  }, [session, fetchProfile]);
 
   const value: AuthContextValue = {
     session,
     user: session?.user ?? null,
     profile,
     role: profile?.role ?? null,
-    isAuthenticated: !!session,
+    isAuthenticated: !!session && !!profile,
     isLoading,
     signOut,
+    refreshProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

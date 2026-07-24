@@ -3,6 +3,9 @@ import {
   getRevenueReport,
   getOccupancyReport,
   getPaymentSummaryReport,
+  getPaymentSummaryReportForManager,
+  getRevenueReportForManager,
+  getOccupancyReportForManager,
 } from '../services/reportsService';
 import { useAuthContext } from '@/providers/AuthProvider';
 
@@ -29,6 +32,33 @@ export function usePaymentSummaryReport(startDate: string, endDate: string) {
   return useQuery({
     queryKey: ['payment-summary-report', profile?.id, startDate, endDate],
     queryFn: () => getPaymentSummaryReport(profile!.id, startDate, endDate),
+    enabled: !!profile?.id,
+  });
+}
+
+export function useRevenueReportForManager(startDate: string, endDate: string) {
+  const { profile } = useAuthContext();
+  return useQuery({
+    queryKey: ['revenue-report-manager', profile?.id, startDate, endDate],
+    queryFn: () => getRevenueReportForManager(profile!.id, startDate, endDate),
+    enabled: !!profile?.id,
+  });
+}
+
+export function useOccupancyReportForManager() {
+  const { profile } = useAuthContext();
+  return useQuery({
+    queryKey: ['occupancy-report-manager', profile?.id],
+    queryFn: () => getOccupancyReportForManager(profile!.id),
+    enabled: !!profile?.id,
+  });
+}
+
+export function usePaymentSummaryReportForManager(startDate: string, endDate: string) {
+  const { profile } = useAuthContext();
+  return useQuery({
+    queryKey: ['payment-summary-report-manager', profile?.id, startDate, endDate],
+    queryFn: () => getPaymentSummaryReportForManager(profile!.id, startDate, endDate),
     enabled: !!profile?.id,
   });
 }

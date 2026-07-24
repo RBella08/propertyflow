@@ -4,6 +4,7 @@ import {
   getTenantMaintenanceRequests,
   getMaintenanceDetail,
   getLandlordMaintenanceRequests,
+  getManagerMaintenanceRequests,
 } from '../services/maintenanceService';
 import { useAuthContext } from '@/providers/AuthProvider';
 
@@ -29,6 +30,15 @@ export function useLandlordMaintenanceRequests() {
   return useQuery({
     queryKey: ['landlord-maintenance', profile?.id],
     queryFn: () => getLandlordMaintenanceRequests(profile!.id),
+    enabled: !!profile?.id,
+  });
+}
+
+export function useManagerMaintenanceRequests() {
+  const { profile } = useAuthContext();
+  return useQuery({
+    queryKey: ['manager-maintenance', profile?.id],
+    queryFn: () => getManagerMaintenanceRequests(profile!.id),
     enabled: !!profile?.id,
   });
 }

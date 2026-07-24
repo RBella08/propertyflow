@@ -4,11 +4,11 @@ export const maintenanceSchema = z.object({
   category: z.enum([
     'plumbing',
     'electrical',
-    'structural',
     'security',
     'cleaning',
     'water',
     'internet',
+    'structural',
     'other',
   ]),
   priority: z.enum(['low', 'medium', 'high', 'emergency']),

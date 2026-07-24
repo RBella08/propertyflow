@@ -6,6 +6,7 @@ import {
   publishProperty,
   deleteProperty,
   getLandlordId,
+  unarchiveProperty,
 } from '../services/propertyManagementService';
 import { useAuthContext } from '@/providers/AuthProvider';
 import type { PropertyFormInput } from '../schemas';
@@ -47,6 +48,14 @@ export function useArchiveProperty() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (propertyId: string) => archiveProperty(propertyId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['landlord-properties'] }),
+  });
+}
+
+export function useUnarchiveProperty() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (propertyId: string) => unarchiveProperty(propertyId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['landlord-properties'] }),
   });
 }

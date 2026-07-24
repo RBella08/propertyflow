@@ -41,7 +41,7 @@ export function Navbar() {
           <ThemeToggle />
           {isAuthenticated ? (
             <>
-              <NotificationBell unreadCount={3} />
+              <NotificationBell />
               <UserMenu />
             </>
           ) : (
@@ -80,9 +80,14 @@ export function Navbar() {
               ))}
               <div className="mt-4 flex flex-col gap-2">
                 {isAuthenticated ? (
-                  <Button asChild>
-                    <Link to="/profile">My Profile</Link>
-                  </Button>
+                  <>
+                    <Button variant="outline" asChild>
+                      <Link to="/favorites">My Favorites</Link>
+                    </Button>
+                    <Button asChild>
+                      <Link to="/profile">My Profile</Link>
+                    </Button>
+                  </>
                 ) : (
                   <>
                     <Button variant="outline" asChild>

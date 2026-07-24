@@ -143,6 +143,35 @@ export async function getMaintenanceDetail(requestId: string): Promise<Maintenan
   };
 }
 
+export async function getManagerMaintenanceRequests(
+  profileId: string
+): Promise<LandlordMaintenanceItem[]> {
+  const { data, error } = await supabase
+    .from('maintenance_requests')
+    .select(
+      `id, subject, category, priority, status, created_at,
+       properties!inner(property_name, manager_id),
+       units!inner(unit_number),
+       tenants!inner(profiles!inner(full_name, email))`
+    )
+    .eq('properties.manager_id', profileId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    subject: row.subject,
+    category: row.category,
+    priority: row.priority,
+    status: row.status,
+    createdAt: row.created_at,
+    propertyName: row.properties.property_name,
+    unitNumber: row.units.unit_number,
+    tenantName: row.tenants.profiles.full_name ?? row.tenants.profiles.email,
+  }));
+}
+
 export async function getLandlordMaintenanceRequests(
   profileId: string
 ): Promise<LandlordMaintenanceItem[]> {

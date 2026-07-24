@@ -10,6 +10,8 @@ export function useCreateLease() {
       queryClient.invalidateQueries({ queryKey: ['landlord-leases'] });
       queryClient.invalidateQueries({ queryKey: ['available-units'] });
       queryClient.invalidateQueries({ queryKey: ['landlord-units'] });
+      queryClient.invalidateQueries({ queryKey: ['manager-leases'] });
+      queryClient.invalidateQueries({ queryKey: ['available-units-manager'] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       queryClient.invalidateQueries({ queryKey: ['property'] });
     },
@@ -33,6 +35,8 @@ export function useTerminateLease() {
       queryClient.invalidateQueries({ queryKey: ['landlord-leases'] });
       queryClient.invalidateQueries({ queryKey: ['available-units'] });
       queryClient.invalidateQueries({ queryKey: ['landlord-units'] });
+      queryClient.invalidateQueries({ queryKey: ['manager-leases'] });
+      queryClient.invalidateQueries({ queryKey: ['available-units-manager'] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
       queryClient.invalidateQueries({ queryKey: ['property'] });
     },

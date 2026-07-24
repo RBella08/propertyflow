@@ -3,7 +3,17 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { PropertyFilters as PropertyFiltersType } from '../services/propertyService';
 
-const PROPERTY_TYPES = ['apartment', 'house', 'duplex', 'bungalow', 'studio', 'office'];
+const PROPERTY_TYPES = [
+  'apartment',
+  'duplex',
+  'bungalow',
+  'studio',
+  'terrace',
+  'penthouse',
+  'mansion',
+  'self_contained',
+  'office',
+];
 const BEDROOM_OPTIONS = [1, 2, 3, 4, 5];
 
 interface PropertyFiltersProps {

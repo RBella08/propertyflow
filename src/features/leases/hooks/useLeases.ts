@@ -1,5 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { getLandlordLeases, getAvailableUnitOptions } from '../services/leaseService';
+import {
+  getLandlordLeases,
+  getAvailableUnitOptions,
+  getManagerLeases,
+  getAvailableUnitOptionsForManager,
+} from '../services/leaseService';
 import { useAuthContext } from '@/providers/AuthProvider';
 
 export function useLandlordLeases() {
@@ -16,6 +21,24 @@ export function useAvailableUnitOptions() {
   return useQuery({
     queryKey: ['available-units', profile?.id],
     queryFn: () => getAvailableUnitOptions(profile!.id),
+    enabled: !!profile?.id,
+  });
+}
+
+export function useManagerLeases() {
+  const { profile } = useAuthContext();
+  return useQuery({
+    queryKey: ['manager-leases', profile?.id],
+    queryFn: () => getManagerLeases(profile!.id),
+    enabled: !!profile?.id,
+  });
+}
+
+export function useAvailableUnitOptionsForManager() {
+  const { profile } = useAuthContext();
+  return useQuery({
+    queryKey: ['available-units-manager', profile?.id],
+    queryFn: () => getAvailableUnitOptionsForManager(profile!.id),
     enabled: !!profile?.id,
   });
 }

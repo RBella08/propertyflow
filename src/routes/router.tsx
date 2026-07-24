@@ -5,14 +5,43 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { DashboardLayout } from '@/layouts/DashboardLayout';
 import { ProtectedRoute } from './ProtectedRoute';
 import { PlaceholderPage } from '@/components/PlaceholderPage';
+import { AdminCmsPage } from '@/pages/admin/AdminCmsPage';
+import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage';
+import { AdminPropertiesPage } from '@/pages/admin/AdminPropertiesPage';
+import { AdminUnitsPage } from '@/pages/admin/AdminUnitsPage';
+import { AdminLeasesPage } from '@/pages/admin/AdminLeasesPage';
+import { AdminPaymentsPage } from '@/pages/admin/AdminPaymentsPage';
+import { AdminMaintenancePage } from '@/pages/admin/AdminMaintenancePage';
+import { AdminReportsPage } from '@/pages/admin/AdminReportsPage';
+import { AdminCmsEditPage } from '@/pages/admin/AdminCmsEditPage';
+import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
 import { HomePage } from '@/pages/public/HomePage';
+import { AboutPage } from '@/pages/public/AboutPage';
+import { ContactPage } from '@/pages/public/ContactPage';
+import { FaqPage } from '@/pages/public/FaqPage';
+import { ManagerDashboardPage } from '@/pages/manager/ManagerDashboardPage';
+import { ManagerPropertiesPage } from '@/pages/manager/ManagerPropertiesPage';
+import { ManagerTenantsPage } from '@/pages/manager/ManagerTenantsPage';
+import { ManagerMaintenancePage } from '@/pages/manager/ManagerMaintenancePage';
+import { ManagerUnitsPage } from '@/pages/manager/ManagerUnitsPage';
+import { ManagerCreateUnitPage } from '@/pages/manager/ManagerCreateUnitPage';
+import { ManagerEditUnitPage } from '@/pages/manager/ManagerEditUnitPage';
+import { ManagerLeasesPage } from '@/pages/manager/ManagerLeasesPage';
+import { ManagerCreateLeasePage } from '@/pages/manager/ManagerCreateLeasePage';
+import { ManagerPaymentsPage } from '@/pages/manager/ManagerPaymentsPage';
+import { ManagerReportsPage } from '@/pages/manager/ManagerReportsPage';
+import { InspectionBookingPage } from '@/pages/public/InspectionBookingPage';
+import { PrivacyPolicyPage } from '@/pages/public/PrivacyPolicyPage';
+import { TermsPage } from '@/pages/public/TermsPage';
 import { NotFoundPage } from '@/pages/errors/NotFoundPage';
 import { UnauthorizedPage } from '@/pages/errors/UnauthorizedPage';
 import { ForbiddenPage } from '@/pages/errors/ForbiddenPage';
 import { ServerErrorPage } from '@/pages/errors/ServerErrorPage';
+import { UserGuidePage } from '@/pages/public/UserGuidePage';
 import type { UserRole } from '@/types/auth';
 import { GuestRoute } from './GuestRoute';
 import { LoginPage } from '@/pages/auth/LoginPage';
+import { VendorsPage } from '@/pages/landlord/VendorsPage';
 import { RegisterPage } from '@/pages/auth/RegisterPage';
 import { VerifyEmailPage } from '@/pages/auth/VerifyEmailPage';
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage';
@@ -30,9 +59,14 @@ import { LandlordLeasesPage } from '@/pages/landlord/LandlordLeasesPage';
 import { CreateLeasePage } from '@/pages/landlord/CreateLeasePage';
 import { ReportsPage } from '@/pages/landlord/ReportsPage';
 import { LandlordDashboardPage } from '@/pages/landlord/LandlordDashboardPage';
+import { LandlordTenantsPage } from '@/pages/landlord/LandlordTenantsPage';
+import { LandlordPaymentsPage } from '@/pages/landlord/LandlordPaymentsPage';
+import { ProfilePage } from '@/pages/shared/ProfilePage';
+import { SettingsPage } from '@/pages/shared/SettingsPage';
 import { PayRentPage } from '@/pages/tenant/PayRentPage';
 import { PaymentsPage } from '@/pages/tenant/PaymentsPage';
 import { ReceiptsPage } from '@/pages/tenant/ReceiptsPage';
+import { TenantLeasePage } from '@/pages/tenant/TenantLeasePage';
 import { TenantMaintenancePage } from '@/pages/tenant/TenantMaintenancePage';
 import { CreateMaintenancePage } from '@/pages/tenant/CreateMaintenancePage';
 import { MaintenanceDetailsPage } from '@/pages/tenant/MaintenanceDetailsPage';
@@ -70,14 +104,15 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'properties', element: <PropertyListingsPage /> },
       { path: 'properties/:slug', element: <PropertyDetailsPage /> },
-      { path: 'about', element: page('About') },
-      { path: 'contact', element: page('Contact') },
-      { path: 'faq', element: page('FAQ') },
-      { path: 'privacy-policy', element: page('Privacy Policy') },
-      { path: 'terms-of-service', element: page('Terms of Service') },
+      { path: 'about', element: <AboutPage /> },
+      { path: 'contact', element: <ContactPage /> },
+      { path: 'faq', element: <FaqPage /> },
+      { path: 'privacy-policy', element: <PrivacyPolicyPage /> },
+      { path: 'terms-of-service', element: <TermsPage /> },
+      { path: 'guide', element: <UserGuidePage /> },
       { path: 'search', element: page('Search Results') },
       { path: 'favorites', element: <FavoritesPage /> },
-      { path: 'inspection/:propertyId', element: page('Book Inspection') },
+      { path: 'inspection/:propertyId', element: <InspectionBookingPage /> },
     ],
   },
 
@@ -102,18 +137,20 @@ export const router = createBrowserRouter([
   {
     element: (
       <ProtectedRoute allowedRoles={['tenant', 'landlord', 'manager', 'admin', 'super_admin']}>
-        <DashboardLayout />
+        {' '}
+        <DashboardLayout />{' '}
       </ProtectedRoute>
     ),
     children: [
       // Shared routes — any authenticated role
-      { path: 'profile', element: page('My Profile') },
-      { path: 'settings', element: page('Account Settings') },
+      { path: 'profile', element: <ProfilePage /> },
+      { path: 'settings', element: <SettingsPage /> },
       {
         path: 'notifications',
         element: (
           <ProtectedRoute allowedRoles={['tenant', 'landlord', 'manager', 'admin', 'super_admin']}>
-            <NotificationsPage />
+            {' '}
+            <NotificationsPage />{' '}
           </ProtectedRoute>
         ),
       },
@@ -122,7 +159,8 @@ export const router = createBrowserRouter([
         path: 'tenant/dashboard',
         element: (
           <ProtectedRoute allowedRoles={['tenant']}>
-            <TenantDashboardPage />
+            {' '}
+            <TenantDashboardPage />{' '}
           </ProtectedRoute>
         ),
       },
@@ -132,12 +170,21 @@ export const router = createBrowserRouter([
         ['tenant'],
         [
           { path: 'tenant/dashboard', title: 'Tenant Dashboard' },
-          { path: 'tenant/lease', title: 'Lease' },
+          {
+            path: 'tenant/lease',
+            element: (
+              <ProtectedRoute allowedRoles={['tenant']}>
+                {' '}
+                <TenantLeasePage />{' '}
+              </ProtectedRoute>
+            ),
+          },
           {
             path: 'tenant/payments',
             element: (
               <ProtectedRoute allowedRoles={['tenant']}>
-                <PaymentsPage />
+                {' '}
+                <PaymentsPage />{' '}
               </ProtectedRoute>
             ),
           },
@@ -145,7 +192,8 @@ export const router = createBrowserRouter([
             path: 'tenant/payments/pay',
             element: (
               <ProtectedRoute allowedRoles={['tenant']}>
-                <PayRentPage />
+                {' '}
+                <PayRentPage />{' '}
               </ProtectedRoute>
             ),
           },
@@ -153,7 +201,8 @@ export const router = createBrowserRouter([
             path: 'tenant/receipts',
             element: (
               <ProtectedRoute allowedRoles={['tenant']}>
-                <ReceiptsPage />
+                {' '}
+                <ReceiptsPage />{' '}
               </ProtectedRoute>
             ),
           },
@@ -161,7 +210,8 @@ export const router = createBrowserRouter([
             path: 'tenant/maintenance',
             element: (
               <ProtectedRoute allowedRoles={['tenant']}>
-                <TenantMaintenancePage />
+                {' '}
+                <TenantMaintenancePage />{' '}
               </ProtectedRoute>
             ),
           },
@@ -169,7 +219,8 @@ export const router = createBrowserRouter([
             path: 'tenant/maintenance/new',
             element: (
               <ProtectedRoute allowedRoles={['tenant']}>
-                <CreateMaintenancePage />
+                {' '}
+                <CreateMaintenancePage />{' '}
               </ProtectedRoute>
             ),
           },
@@ -177,7 +228,8 @@ export const router = createBrowserRouter([
             path: 'tenant/maintenance/:id',
             element: (
               <ProtectedRoute allowedRoles={['tenant']}>
-                <MaintenanceDetailsPage />
+                {' '}
+                <MaintenanceDetailsPage />{' '}
               </ProtectedRoute>
             ),
           },
@@ -266,28 +318,56 @@ export const router = createBrowserRouter([
             path: 'landlord/leases/new',
             element: (
               <ProtectedRoute allowedRoles={['landlord']}>
+                {' '}
                 <CreateLeasePage />{' '}
               </ProtectedRoute>
             ),
           },
+          {
+            path: 'landlord/vendors',
+            element: (
+              <ProtectedRoute allowedRoles={['landlord']}>
+                {' '}
+                <VendorsPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
           { path: 'landlord/leases/:id', title: 'Lease Details' },
-          { path: 'landlord/tenants', title: 'Tenants' },
+          {
+            path: 'landlord/tenants',
+            element: (
+              <ProtectedRoute allowedRoles={['landlord']}>
+                {' '}
+                <LandlordTenantsPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
           {
             path: 'landlord/reports',
             element: (
               <ProtectedRoute allowedRoles={['landlord']}>
-                <ReportsPage />
+                {' '}
+                <ReportsPage />{' '}
               </ProtectedRoute>
             ),
           },
           { path: 'landlord/reports/revenue', title: 'Revenue Report' },
           { path: 'landlord/reports/occupancy', title: 'Occupancy Report' },
-          { path: 'landlord/payments', title: 'Payments' },
+          {
+            path: 'landlord/payments',
+            element: (
+              <ProtectedRoute allowedRoles={['landlord']}>
+                {' '}
+                <LandlordPaymentsPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
           {
             path: 'landlord/maintenance',
             element: (
               <ProtectedRoute allowedRoles={['landlord']}>
-                <LandlordMaintenancePage />
+                {' '}
+                <LandlordMaintenancePage />{' '}
               </ProtectedRoute>
             ),
           },
@@ -300,14 +380,106 @@ export const router = createBrowserRouter([
       ...roleRoutes(
         ['manager'],
         [
-          { path: 'manager/dashboard', title: 'Manager Dashboard' },
-          { path: 'manager/properties', title: 'Assigned Properties' },
+          {
+            path: 'manager/dashboard',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerDashboardPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/properties',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerPropertiesPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/tenants',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerTenantsPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/payments',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerPaymentsPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/maintenance',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerMaintenancePage />{' '}
+              </ProtectedRoute>
+            ),
+          },
           { path: 'manager/properties/:id', title: 'Property Details' },
-          { path: 'manager/units', title: 'Units' },
-          { path: 'manager/tenants', title: 'Tenants' },
-          { path: 'manager/leases', title: 'Leases' },
-          { path: 'manager/maintenance', title: 'Maintenance' },
-          { path: 'manager/reports', title: 'Reports' },
+          {
+            path: 'manager/units',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerUnitsPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/units/new',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerCreateUnitPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/units/:id/edit',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerEditUnitPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/leases',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerLeasesPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/leases/new',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerCreateLeasePage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/reports',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                {' '}
+                <ManagerReportsPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
           { path: 'manager/notifications', title: 'Notifications' },
           { path: 'manager/profile', title: 'Manager Profile' },
         ]
@@ -317,46 +489,116 @@ export const router = createBrowserRouter([
       ...roleRoutes(
         ['admin', 'super_admin'],
         [
-          { path: 'admin/dashboard', title: 'Admin Dashboard' },
+          {
+            path: 'admin/dashboard',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <AdminDashboardPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'admin/properties',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <AdminPropertiesPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'admin/units',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <AdminUnitsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'admin/leases',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <AdminLeasesPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'admin/payments',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <AdminPaymentsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'admin/maintenance',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <AdminMaintenancePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'admin/reports',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                <AdminReportsPage />
+              </ProtectedRoute>
+            ),
+          },
           {
             path: 'admin/users',
             element: (
               <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <AdminUsersPage />
+                {' '}
+                <AdminUsersPage />{' '}
               </ProtectedRoute>
             ),
           },
           { path: 'admin/users/new', title: 'Create User' },
           { path: 'admin/users/:id', title: 'User Details' },
           { path: 'admin/users/:id/edit', title: 'Edit User' },
-          { path: 'admin/properties', title: 'Properties' },
-          { path: 'admin/units', title: 'Units' },
-          { path: 'admin/leases', title: 'Leases' },
-          { path: 'admin/payments', title: 'Payments' },
-          { path: 'admin/maintenance', title: 'Maintenance' },
-          { path: 'admin/reports', title: 'Reports' },
           { path: 'admin/reports/revenue', title: 'Revenue Report' },
           { path: 'admin/reports/occupancy', title: 'Occupancy Report' },
           { path: 'admin/reports/payments', title: 'Payments Report' },
           { path: 'admin/reports/maintenance', title: 'Maintenance Report' },
           { path: 'admin/reports/users', title: 'Users Report' },
-          { path: 'admin/cms', title: 'CMS' },
-          { path: 'admin/cms/homepage', title: 'CMS — Homepage' },
-          { path: 'admin/cms/about', title: 'CMS — About' },
-          { path: 'admin/cms/contact', title: 'CMS — Contact' },
-          { path: 'admin/cms/faq', title: 'CMS — FAQ' },
-          { path: 'admin/cms/privacy', title: 'CMS — Privacy Policy' },
-          { path: 'admin/cms/terms', title: 'CMS — Terms of Service' },
+          {
+            path: 'admin/cms',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                {' '}
+                <AdminCmsPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'admin/cms/:slug',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                {' '}
+                <AdminCmsEditPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'admin/settings',
+            element: (
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
+                {' '}
+                <AdminSettingsPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
           { path: 'admin/notifications', title: 'Notifications' },
           {
             path: 'admin/audit-logs',
             element: (
               <ProtectedRoute allowedRoles={['admin', 'super_admin']}>
-                <AdminAuditLogsPage />
+                {' '}
+                <AdminAuditLogsPage />{' '}
               </ProtectedRoute>
             ),
           },
-          { path: 'admin/settings', title: 'Platform Settings' },
         ]
       ),
 

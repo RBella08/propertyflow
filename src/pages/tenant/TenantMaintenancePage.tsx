@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,8 +7,20 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useTenantMaintenanceRequests } from '@/features/maintenance/hooks/useMaintenance';
 import { MaintenanceStatusBadge } from '@/features/maintenance/components/MaintenanceStatusBadge';
 
+const STATUS_FILTERS = [
+  'all',
+  'submitted',
+  'assigned',
+  'in_progress',
+  'completed',
+  'closed',
+] as const;
+
 export function TenantMaintenancePage() {
   const { data: requests, isLoading } = useTenantMaintenanceRequests();
+  const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('all');
+
+  const filtered = requests?.filter((r) => statusFilter === 'all' || r.status === statusFilter);
 
   return (
     <div className="flex flex-col gap-6">
@@ -23,11 +36,25 @@ export function TenantMaintenancePage() {
         </Button>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {STATUS_FILTERS.map((status) => (
+          <Button
+            key={status}
+            size="sm"
+            variant={statusFilter === status ? 'default' : 'outline'}
+            onClick={() => setStatusFilter(status)}
+            className="capitalize"
+          >
+            {status === 'all' ? 'All' : status.replace('_', ' ')}
+          </Button>
+        ))}
+      </div>
+
       {isLoading ? (
         <Skeleton className="h-40" />
-      ) : requests && requests.length > 0 ? (
+      ) : filtered && filtered.length > 0 ? (
         <div className="flex flex-col gap-3">
-          {requests.map((r) => (
+          {filtered.map((r) => (
             <Link key={r.id} to={`/tenant/maintenance/${r.id}`}>
               <Card className="transition-colors hover:bg-accent">
                 <CardContent className="flex items-center justify-between p-4">
@@ -45,7 +72,7 @@ export function TenantMaintenancePage() {
         </div>
       ) : (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-h5 text-foreground">No maintenance requests yet</p>
+          <p className="text-h5 text-foreground">No requests match this filter</p>
           <Button asChild>
             <Link to="/tenant/maintenance/new">
               <Plus className="mr-2 h-4 w-4" /> Report an Issue

@@ -126,7 +126,7 @@ export function CreateLeasePage() {
               <Input
                 id="monthlyRent"
                 type="number"
-                {...register('monthlyRent')}
+                {...register('monthlyRent', { valueAsNumber: true })}
                 error={!!errors.monthlyRent}
               />
               {errors.monthlyRent && (
@@ -135,7 +135,12 @@ export function CreateLeasePage() {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="securityDeposit">Security deposit (₦)</Label>
-              <Input id="securityDeposit" type="number" {...register('securityDeposit')} />
+              <Input
+                id="securityDeposit"
+                type="number"
+                {...register('securityDeposit', { valueAsNumber: true })}
+                error={!!errors.securityDeposit}
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="billingCycle">Billing cycle</Label>

@@ -168,6 +168,50 @@ export async function createLease(input: LeaseFormInput): Promise<void> {
   }
 }
 
+export async function getAvailableUnitOptionsForManager(profileId: string): Promise<UnitOption[]> {
+  const { data, error } = await supabase
+    .from('units')
+    .select('id, unit_number, rent_amount, properties!inner(property_name, manager_id)')
+    .eq('properties.manager_id', profileId)
+    .eq('status', 'available')
+    .order('unit_number');
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    propertyName: row.properties.property_name,
+    unitNumber: row.unit_number,
+    rentAmount: row.rent_amount,
+  }));
+}
+
+export async function getManagerLeases(profileId: string): Promise<LandlordLeaseItem[]> {
+  const { data, error } = await supabase
+    .from('leases')
+    .select(
+      `id, lease_number, start_date, end_date, monthly_rent, status,
+       units!inner(unit_number, properties!inner(property_name, manager_id)),
+       tenants!inner(profiles!inner(full_name, email))`
+    )
+    .eq('units.properties.manager_id', profileId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    leaseNumber: row.lease_number,
+    tenantName: row.tenants.profiles.full_name ?? row.tenants.profiles.email,
+    propertyName: row.units.properties.property_name,
+    unitNumber: row.units.unit_number,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    monthlyRent: row.monthly_rent,
+    status: row.status,
+  }));
+}
+
 export async function getLandlordLeases(profileId: string): Promise<LandlordLeaseItem[]> {
   const landlordId = await getLandlordId(profileId);
 

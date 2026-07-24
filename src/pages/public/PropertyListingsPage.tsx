@@ -1,25 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useProperties } from '@/features/properties/hooks/useProperties';
 import { PropertyCard } from '@/features/properties/components/PropertyCard';
 import { PropertyCardSkeleton } from '@/features/properties/components/PropertyCardSkeleton';
 import { PropertyFilters } from '@/features/properties/components/PropertyFilters';
 import { Button } from '@/components/ui/button';
-import type { PropertyFilters as Filters } from '@/features/properties/services/propertyService';
+import type {
+  PropertyFilters as Filters,
+  PropertyListItem,
+} from '@/features/properties/services/propertyService';
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 9;
 
 export function PropertyListingsPage() {
   const [filters, setFilters] = useState<Filters>({});
   const [page, setPage] = useState(1);
+  const [accumulated, setAccumulated] = useState<PropertyListItem[]>([]);
 
-  const { data, isLoading, isError, isPlaceholderData } = useProperties(filters, page, PAGE_SIZE);
+  const { data, isLoading, isError, isFetching } = useProperties(filters, page, PAGE_SIZE);
 
-  const handleFiltersChange = (next: Filters) => {
-    setFilters(next);
+  // Reset accumulated results whenever filters change (new search)
+  useEffect(() => {
     setPage(1);
-  };
+    setAccumulated([]);
+  }, [filters]);
 
-  const totalPages = data ? Math.max(1, Math.ceil(data.total / PAGE_SIZE)) : 1;
+  // Append each new page's results rather than replacing them
+  useEffect(() => {
+    if (!data) return;
+    setAccumulated((prev) => (page === 1 ? data.items : [...prev, ...data.items]));
+  }, [data, page]);
+
+  const handleFiltersChange = (next: Filters) => setFilters(next);
+
+  const hasMore = data ? accumulated.length < data.total : false;
 
   return (
     <div className="container py-8">
@@ -39,36 +52,25 @@ export function PropertyListingsPage() {
       )}
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {isLoading
-          ? Array.from({ length: 6 }).map((_, i) => <PropertyCardSkeleton key={i} />)
-          : data?.items.map((property) => <PropertyCard key={property.id} property={property} />)}
+        {accumulated.map((property) => (
+          <PropertyCard key={property.id} property={property} />
+        ))}
+        {isLoading &&
+          page === 1 &&
+          Array.from({ length: 6 }).map((_, i) => <PropertyCardSkeleton key={i} />)}
       </div>
 
-      {!isLoading && data?.items.length === 0 && (
+      {!isLoading && accumulated.length === 0 && (
         <div className="flex flex-col items-center gap-2 py-16 text-center">
           <p className="text-h5 text-foreground">No properties match your search</p>
           <p className="text-muted-foreground">Try adjusting your filters.</p>
         </div>
       )}
 
-      {data && data.total > PAGE_SIZE && (
-        <div className="mt-8 flex items-center justify-center gap-3">
-          <Button
-            variant="outline"
-            disabled={page === 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            Previous
-          </Button>
-          <span className="text-small text-muted-foreground">
-            Page {page} of {totalPages}
-          </span>
-          <Button
-            variant="outline"
-            disabled={isPlaceholderData || page >= totalPages}
-            onClick={() => setPage((p) => p + 1)}
-          >
-            Next
+      {hasMore && (
+        <div className="mt-8 flex justify-center">
+          <Button variant="outline" loading={isFetching} onClick={() => setPage((p) => p + 1)}>
+            Load More
           </Button>
         </div>
       )}

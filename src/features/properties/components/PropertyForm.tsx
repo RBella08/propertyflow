@@ -13,7 +13,17 @@ import { PropertyImageUploader } from './PropertyImageUploader';
 import { propertySchema, type PropertyFormInput } from '../schemas';
 import { useCreateProperty } from '../hooks/usePropertyMutations';
 
-const PROPERTY_TYPES = ['apartment', 'house', 'duplex', 'bungalow', 'studio', 'office'];
+const PROPERTY_TYPES = [
+  'apartment',
+  'duplex',
+  'bungalow',
+  'studio',
+  'terrace',
+  'penthouse',
+  'mansion',
+  'self_contained',
+  'office',
+];
 
 export function PropertyForm() {
   const navigate = useNavigate();
