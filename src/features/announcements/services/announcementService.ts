@@ -42,15 +42,15 @@ export async function createAnnouncement(
       .select('profile_id')
       .in('id', tenantIds);
 
-    const notifications = (tenants ?? []).map((t) => ({
-      user_id: t.profile_id,
-      title: `New announcement: ${input.title}`,
-      message: input.body,
-      type: 'announcement',
-    }));
-
-    if (notifications.length > 0) {
-      await supabase.from('notifications').insert(notifications);
+    if (tenants && tenants.length > 0) {
+      await supabase.from('notifications').insert(
+        tenants.map((t) => ({
+          user_id: t.profile_id,
+          title: `New announcement: ${input.title}`,
+          message: input.body,
+          type: 'announcement' as const,
+        }))
+      );
     }
   } catch (notifyError) {
     console.error('Failed to notify tenants of announcement:', notifyError);
