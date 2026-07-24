@@ -65,7 +65,9 @@ import { ProfilePage } from '@/pages/shared/ProfilePage';
 import { SettingsPage } from '@/pages/shared/SettingsPage';
 import { PayRentPage } from '@/pages/tenant/PayRentPage';
 import { PaymentsPage } from '@/pages/tenant/PaymentsPage';
+import { PayoutSettingsPage } from '@/pages/landlord/PayoutSettingsPage';
 import { ReceiptsPage } from '@/pages/tenant/ReceiptsPage';
+import { TenantAnnouncementsPage } from '@/pages/tenant/TenantAnnouncementsPage';
 import { TenantLeasePage } from '@/pages/tenant/TenantLeasePage';
 import { TenantMaintenancePage } from '@/pages/tenant/TenantMaintenancePage';
 import { CreateMaintenancePage } from '@/pages/tenant/CreateMaintenancePage';
@@ -268,6 +270,14 @@ export const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
+          {
+            path: 'landlord/payout-settings',
+            element: (
+              <ProtectedRoute allowedRoles={['landlord']}>
+                <PayoutSettingsPage />
+              </ProtectedRoute>
+            ),
+          },
           { path: 'landlord/properties/:id', title: 'Property Details' },
           {
             path: 'landlord/properties/:id/edit',
@@ -348,6 +358,14 @@ export const router = createBrowserRouter([
               <ProtectedRoute allowedRoles={['landlord']}>
                 {' '}
                 <ReportsPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'tenant/announcements',
+            element: (
+              <ProtectedRoute allowedRoles={['tenant']}>
+                <TenantAnnouncementsPage />
               </ProtectedRoute>
             ),
           },

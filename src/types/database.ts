@@ -32,6 +32,62 @@ export type Database = {
         };
         Relationships: [];
       };
+      announcements: {
+        Row: {
+          author_profile_id: string;
+          body: string;
+          created_at: string;
+          id: string;
+          property_id: string;
+          title: string;
+        };
+        Insert: {
+          author_profile_id: string;
+          body: string;
+          created_at?: string;
+          id?: string;
+          property_id: string;
+          title: string;
+        };
+        Update: {
+          author_profile_id?: string;
+          body?: string;
+          created_at?: string;
+          id?: string;
+          property_id?: string;
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'announcements_author_profile_id_fkey';
+            columns: ['author_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'announcements_property_id_fkey';
+            columns: ['property_id'];
+            isOneToOne: false;
+            referencedRelation: 'occupancy_statistics';
+            referencedColumns: ['property_id'];
+          },
+          {
+            foreignKeyName: 'announcements_property_id_fkey';
+            columns: ['property_id'];
+            isOneToOne: false;
+            referencedRelation: 'properties';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'announcements_property_id_fkey';
+            columns: ['property_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_property_listings';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       audit_logs: {
         Row: {
           action: string;
@@ -316,34 +372,52 @@ export type Database = {
       };
       landlords: {
         Row: {
+          account_name: string | null;
+          bank_account_number: string | null;
+          bank_code: string | null;
+          bank_name: string | null;
           business_registration: string | null;
+          commission_percentage: number | null;
           company_name: string | null;
           created_at: string | null;
           id: string;
           notes: string | null;
           profile_id: string;
+          subaccount_code: string | null;
           tax_number: string | null;
           updated_at: string | null;
           website: string | null;
         };
         Insert: {
+          account_name?: string | null;
+          bank_account_number?: string | null;
+          bank_code?: string | null;
+          bank_name?: string | null;
           business_registration?: string | null;
+          commission_percentage?: number | null;
           company_name?: string | null;
           created_at?: string | null;
           id?: string;
           notes?: string | null;
           profile_id: string;
+          subaccount_code?: string | null;
           tax_number?: string | null;
           updated_at?: string | null;
           website?: string | null;
         };
         Update: {
+          account_name?: string | null;
+          bank_account_number?: string | null;
+          bank_code?: string | null;
+          bank_name?: string | null;
           business_registration?: string | null;
+          commission_percentage?: number | null;
           company_name?: string | null;
           created_at?: string | null;
           id?: string;
           notes?: string | null;
           profile_id?: string;
+          subaccount_code?: string | null;
           tax_number?: string | null;
           updated_at?: string | null;
           website?: string | null;
@@ -878,6 +952,13 @@ export type Database = {
             foreignKeyName: 'properties_landlord_id_fkey';
             columns: ['landlord_id'];
             isOneToOne: false;
+            referencedRelation: 'landlord_payment_routing';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'properties_landlord_id_fkey';
+            columns: ['landlord_id'];
+            isOneToOne: false;
             referencedRelation: 'landlords';
             referencedColumns: ['id'];
           },
@@ -1318,6 +1399,13 @@ export type Database = {
             foreignKeyName: 'vendors_landlord_id_fkey';
             columns: ['landlord_id'];
             isOneToOne: false;
+            referencedRelation: 'landlord_payment_routing';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'vendors_landlord_id_fkey';
+            columns: ['landlord_id'];
+            isOneToOne: false;
             referencedRelation: 'landlords';
             referencedColumns: ['id'];
           },
@@ -1393,6 +1481,21 @@ export type Database = {
             referencedColumns: ['id'];
           },
         ];
+      };
+      landlord_payment_routing: {
+        Row: {
+          id: string | null;
+          subaccount_code: string | null;
+        };
+        Insert: {
+          id?: string | null;
+          subaccount_code?: string | null;
+        };
+        Update: {
+          id?: string | null;
+          subaccount_code?: string | null;
+        };
+        Relationships: [];
       };
       maintenance_overview: {
         Row: {

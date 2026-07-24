@@ -27,6 +27,45 @@ export interface ReceiptItem {
   issuedAt: string;
 }
 
+export async function getInvoiceSubaccountCode(invoiceId: string): Promise<string | null> {
+  const { data: invoice, error: invoiceError } = await supabase
+    .from('invoices')
+    .select('lease_id')
+    .eq('id', invoiceId)
+    .single();
+  if (invoiceError) throw invoiceError;
+
+  const { data: lease, error: leaseError } = await supabase
+    .from('leases')
+    .select('unit_id')
+    .eq('id', invoice.lease_id)
+    .single();
+  if (leaseError) throw leaseError;
+
+  const { data: unit, error: unitError } = await supabase
+    .from('units')
+    .select('property_id')
+    .eq('id', lease.unit_id)
+    .single();
+  if (unitError) throw unitError;
+
+  const { data: property, error: propertyError } = await supabase
+    .from('properties')
+    .select('landlord_id')
+    .eq('id', unit.property_id)
+    .single();
+  if (propertyError) throw propertyError;
+
+  const { data: landlord, error: landlordError } = await supabase
+    .from('landlord_payment_routing')
+    .select('subaccount_code')
+    .eq('id', property.landlord_id)
+    .single();
+  if (landlordError) throw landlordError;
+
+  return landlord.subaccount_code;
+}
+
 export async function getTenantId(profileId: string): Promise<string> {
   const { data, error } = await supabase
     .from('tenants')

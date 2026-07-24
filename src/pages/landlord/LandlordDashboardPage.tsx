@@ -5,6 +5,7 @@ import { OccupancyChart } from '@/features/dashboard/components/OccupancyChart';
 import { LandlordMaintenanceList } from '@/features/dashboard/components/LandlordMaintenanceList';
 import { LandlordQuickActions } from '@/features/dashboard/components/LandlordQuickActions';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PayoutSetupBanner } from '@/features/payouts/components/PayoutSetupBanner';
 import { useLandlordDashboard } from '@/features/dashboard/hooks/useLandlordDashboard';
 
 function formatNaira(amount: number) {
@@ -22,6 +23,7 @@ export function LandlordDashboardPage() {
     return (
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+          <PayoutSetupBanner />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />

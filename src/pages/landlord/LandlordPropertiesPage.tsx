@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { Plus, Pencil, Archive, Trash2, Send, UserCog } from 'lucide-react';
+import { Plus, Pencil, Archive, Trash2, Send, UserCog, Megaphone } from 'lucide-react';
 import { toast } from 'sonner';
 import { ArchiveRestore } from 'lucide-react';
 import { useUnarchiveProperty } from '@/features/properties/hooks/usePropertyMutations';
@@ -14,8 +14,10 @@ import {
   useArchiveProperty,
   usePublishProperty,
 } from '@/features/properties/hooks/usePropertyMutations';
+
 import { DeletePropertyDialog } from '@/features/properties/components/DeletePropertyDialog';
 import { AssignManagerDialog } from '@/features/properties/components/AssignManagerDialog';
+import { AnnouncementDialog } from '@/features/announcements/components/AnnouncementDialog';
 import { useQueryClient } from '@tanstack/react-query';
 
 const statusVariant: Record<string, 'success' | 'secondary' | 'warning'> = {
@@ -41,6 +43,7 @@ export function LandlordPropertiesPage() {
     name: string;
     managerId: string | null;
   } | null>(null);
+  const [announceTarget, setAnnounceTarget] = useState<{ id: string; name: string } | null>(null);
 
   const filtered = properties?.filter((p) => {
     const matchesSearch =
@@ -186,6 +189,16 @@ export function LandlordPropertiesPage() {
                   >
                     <UserCog className="h-4 w-4" />
                   </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    title="Post an announcement to this property's tenants"
+                    onClick={() =>
+                      setAnnounceTarget({ id: property.id, name: property.propertyName })
+                    }
+                  >
+                    <Megaphone className="h-4 w-4" />
+                  </Button>
                   {property.status !== 'archived' ? (
                     <Button
                       size="sm"
@@ -246,6 +259,15 @@ export function LandlordPropertiesPage() {
           propertyName={managerTarget.name}
           currentManagerId={managerTarget.managerId}
           onAssigned={() => queryClient.invalidateQueries({ queryKey: ['landlord-properties'] })}
+        />
+      )}
+
+      {announceTarget && (
+        <AnnouncementDialog
+          open={!!announceTarget}
+          onClose={() => setAnnounceTarget(null)}
+          propertyId={announceTarget.id}
+          propertyName={announceTarget.name}
         />
       )}
     </div>

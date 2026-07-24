@@ -10,6 +10,8 @@ interface PaystackConfig {
   amount: number;
   currency: string;
   ref: string;
+  subaccount?: string;
+  bearer?: 'account' | 'subaccount';
   metadata: Record<string, unknown>;
   callback: (response: { reference: string }) => void;
   onClose: () => void;
@@ -41,6 +43,7 @@ export async function openPaystackCheckout(config: {
   amountNaira: number;
   invoiceId: string;
   tenantId: string;
+  subaccountCode?: string | null;
   onSuccess: (reference: string) => void;
   onClose: () => void;
 }) {
@@ -53,6 +56,8 @@ export async function openPaystackCheckout(config: {
     amount: Math.round(config.amountNaira * 100),
     currency: 'NGN',
     ref: reference,
+    subaccount: config.subaccountCode ?? undefined,
+    bearer: config.subaccountCode ? 'subaccount' : undefined,
     metadata: { invoice_id: config.invoiceId, tenant_id: config.tenantId },
     callback: (response) => config.onSuccess(response.reference),
     onClose: config.onClose,

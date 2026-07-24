@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOutstandingInvoices } from '@/features/payments/hooks/usePayments';
-import { getTenantId, verifyPaymentServerSide } from '@/features/payments/services/paymentService';
+import {
+  getTenantId,
+  verifyPaymentServerSide,
+  getInvoiceSubaccountCode,
+} from '@/features/payments/services/paymentService';
 import { openPaystackCheckout } from '@/lib/paystack';
 import { useAuthContext } from '@/providers/AuthProvider';
 
@@ -30,11 +34,13 @@ export function PayRentPage() {
     setPayingInvoiceId(invoiceId);
     try {
       const tenantId = await getTenantId(profile.id);
+      const subaccountCode = await getInvoiceSubaccountCode(invoiceId);
       await openPaystackCheckout({
         email: profile.email,
         amountNaira: balance,
         invoiceId,
         tenantId,
+        subaccountCode,
         onSuccess: async (reference) => {
           setVerifying(true);
           try {
