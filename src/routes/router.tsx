@@ -129,10 +129,13 @@ export const router = createBrowserRouter([
           { path: 'register', element: <RegisterPage /> },
           { path: 'verify-email', element: <VerifyEmailPage /> },
           { path: 'forgot-password', element: <ForgotPasswordPage /> },
-          { path: 'reset-password', element: <ResetPasswordPage /> },
         ],
       },
     ],
+  },
+  {
+    element: <AuthLayout />,
+    children: [{ path: 'reset-password', element: <ResetPasswordPage /> }],
   },
 
   // ---------- AUTHENTICATED DASHBOARD AREA ----------
