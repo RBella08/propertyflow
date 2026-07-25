@@ -81,23 +81,27 @@ const CONTENT: Record<RoleId, { title: string; steps: { heading: string; body: s
         body: 'Go to Properties → Add Property. Fill in details, select amenities, and upload photos. New properties start as a Draft — publish them from the Properties list when ready to go live.',
       },
       {
-        heading: '3. Add Units',
+        heading: '3. Setting Up Payouts',
+        body: 'Before you can receive rent payments, go to Payout Settings and connect your bank account. Once verified, every rent payment automatically splits — your share goes straight to your bank, and PropertyFlow keeps a small percentage as its platform fee. This is fully automatic; you never need to request a transfer.',
+      },
+      {
+        heading: '4. Add Units',
         body: 'Each property can have multiple units (e.g. apartments within a building). Go to Units → Add Unit to set bedrooms, bathrooms, rent, and status.',
       },
       {
-        heading: '4. Create a Lease',
+        heading: '5. Create a Lease',
         body: 'Go to Leases → Create Lease. Select an available unit, look up the tenant by their registered email, and set the lease terms. The unit is automatically marked occupied and a first invoice is generated.',
       },
       {
-        heading: '5. Track Payments and Revenue',
+        heading: '6. Track Payments and Revenue',
         body: 'Payments and Reports show real-time revenue, occupancy, and payment history — exportable as PDF, CSV, or Excel.',
       },
       {
-        heading: '6. Managing Maintenance',
+        heading: '7. Managing Maintenance',
         body: 'Maintenance requests from your tenants appear automatically. Advance each request through its status stages and optionally assign a vendor from your Vendors directory.',
       },
       {
-        heading: '7. Assigning an Estate Manager',
+        heading: '8. Assigning an Estate Manager',
         body: "To have someone manage a property on your behalf: they first register normally as a Tenant (the only public option besides Landlord). Then, contact PropertyFlow support/admin and ask them to change that account's role to \"Manager.\" Once that's done, go to your Properties list and click the manager icon on any property to look them up by email and assign them. A Manager can then handle that property's units, leases, tenants, maintenance, and reports on your behalf — but only for properties you've specifically assigned to them.",
       },
     ],

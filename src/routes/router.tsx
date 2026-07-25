@@ -182,6 +182,14 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'tenant/announcements',
+            element: (
+              <ProtectedRoute allowedRoles={['tenant']}>
+                <TenantAnnouncementsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'tenant/payments',
             element: (
               <ProtectedRoute allowedRoles={['tenant']}>
@@ -358,14 +366,6 @@ export const router = createBrowserRouter([
               <ProtectedRoute allowedRoles={['landlord']}>
                 {' '}
                 <ReportsPage />{' '}
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: 'tenant/announcements',
-            element: (
-              <ProtectedRoute allowedRoles={['tenant']}>
-                <TenantAnnouncementsPage />
               </ProtectedRoute>
             ),
           },

@@ -13,6 +13,8 @@ import {
   useCreateSubaccount,
 } from '@/features/payouts/hooks/usePayouts';
 
+const VERIFY_COOLDOWN_MS = 5000;
+
 export function PayoutSettingsPage() {
   const { data: banks, isLoading: banksLoading } = useBanks();
   const { data: payoutInfo, isLoading: infoLoading } = useMyPayoutInfo();
@@ -23,14 +25,17 @@ export function PayoutSettingsPage() {
   const [bankCode, setBankCode] = useState('');
   const [accountNumber, setAccountNumber] = useState('');
   const [resolvedName, setResolvedName] = useState<string | null>(null);
+  const [verifyDisabledUntil, setVerifyDisabledUntil] = useState(0);
 
   const selectedBank = banks?.find((b) => b.code === bankCode);
+  const verifyOnCooldown = Date.now() < verifyDisabledUntil;
 
   const handleVerify = async () => {
     if (!bankCode || accountNumber.length < 10) {
       toast.error('Select a bank and enter a valid 10-digit account number');
       return;
     }
+    setVerifyDisabledUntil(Date.now() + VERIFY_COOLDOWN_MS);
     try {
       const name = await resolveAccount.mutateAsync({ accountNumber, bankCode });
       setResolvedName(name);
@@ -38,7 +43,10 @@ export function PayoutSettingsPage() {
     } catch (error) {
       setResolvedName(null);
       toast.error('Could not verify account', {
-        description: error instanceof Error ? error.message : 'Check the details and try again',
+        description:
+          error instanceof Error
+            ? `${error.message} — if this keeps happening, wait a minute before trying again (Paystack rate-limits repeated attempts).`
+            : 'Check the details and try again',
       });
     }
   };
@@ -146,10 +154,16 @@ export function PayoutSettingsPage() {
                   variant="outline"
                   onClick={handleVerify}
                   loading={resolveAccount.isPending}
+                  disabled={verifyOnCooldown}
                 >
                   Verify
                 </Button>
               </div>
+              {verifyOnCooldown && (
+                <p className="text-caption text-muted-foreground">
+                  Please wait a few seconds before verifying again.
+                </p>
+              )}
               {resolvedName && (
                 <p className="flex items-center gap-1.5 text-caption text-success">
                   <CheckCircle className="h-3.5 w-3.5" /> {resolvedName}

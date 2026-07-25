@@ -4,9 +4,12 @@ import { Button } from '@/components/ui/button';
 import { useMyPayoutInfo } from '../hooks/usePayouts';
 
 export function PayoutSetupBanner() {
-  const { data: payoutInfo, isLoading } = useMyPayoutInfo();
+  const { data: payoutInfo, isLoading, isError } = useMyPayoutInfo();
 
-  if (isLoading || payoutInfo?.subaccountCode) return null;
+  // Still checking, or a real error occurred (not "not configured yet") —
+  // stay silent rather than flash a confusing banner in either case.
+  if (isLoading) return null;
+  if (payoutInfo?.subaccountCode) return null;
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-warning/40 bg-warning/10 p-4">
@@ -20,6 +23,11 @@ export function PayoutSetupBanner() {
       <Button size="sm" asChild>
         <Link to="/landlord/payout-settings">Set Up Now</Link>
       </Button>
+      {isError && (
+        <p className="w-full text-caption text-muted-foreground">
+          (We couldn&apos;t confirm your current status — click above to check.)
+        </p>
+      )}
     </div>
   );
 }

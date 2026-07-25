@@ -17,6 +17,7 @@ export function useMyPayoutInfo() {
     queryKey: ['my-payout-info', profile?.id],
     queryFn: () => getMyPayoutInfo(profile!.id),
     enabled: !!profile?.id,
+    retry: false,
   });
 }
 

@@ -22,8 +22,6 @@ export async function createAnnouncement(
   });
   if (error) throw error;
 
-  // Notify every tenant with an active lease on this property — best-effort,
-  // never blocks the announcement itself from being saved.
   try {
     const { data: units } = await supabase.from('units').select('id').eq('property_id', propertyId);
     const unitIds = (units ?? []).map((u) => u.id);
