@@ -15,6 +15,7 @@ import { AdminMaintenancePage } from '@/pages/admin/AdminMaintenancePage';
 import { AdminReportsPage } from '@/pages/admin/AdminReportsPage';
 import { AdminCmsEditPage } from '@/pages/admin/AdminCmsEditPage';
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage';
+import { BulkImportPage } from '@/pages/landlord/BulkImportPage';
 import { HomePage } from '@/pages/public/HomePage';
 import { AboutPage } from '@/pages/public/AboutPage';
 import { ContactPage } from '@/pages/public/ContactPage';
@@ -286,6 +287,14 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['landlord']}>
                 <PayoutSettingsPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'landlord/bulk-import',
+            element: (
+              <ProtectedRoute allowedRoles={['landlord']}>
+                <BulkImportPage />
               </ProtectedRoute>
             ),
           },

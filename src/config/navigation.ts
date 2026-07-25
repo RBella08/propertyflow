@@ -15,6 +15,7 @@ import {
   FileSignature,
   Shield,
   Megaphone,
+  Upload,
 } from 'lucide-react';
 import type { UserRole } from '@/types/auth';
 
@@ -46,6 +47,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Vendors', path: '/landlord/vendors', icon: Wrench },
     { label: 'Maintenance', path: '/landlord/maintenance', icon: Wrench },
     { label: 'Reports', path: '/landlord/reports', icon: BarChart3 },
+    { label: 'Bulk Import', path: '/landlord/bulk-import', icon: Upload },
     { label: 'Payout Settings', path: '/landlord/payout-settings', icon: Wallet },
     { label: 'Notifications', path: '/notifications', icon: Bell },
     { label: 'Settings', path: '/settings', icon: Settings },
