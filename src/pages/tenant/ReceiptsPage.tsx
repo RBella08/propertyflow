@@ -1,7 +1,9 @@
 import { Download } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useReceipts } from '@/features/payments/hooks/usePayments';
+import { exportReceiptPDF } from '@/lib/export';
 
 function formatNaira(amount: number) {
   return new Intl.NumberFormat('en-NG', {
@@ -18,10 +20,7 @@ export function ReceiptsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-h4 text-foreground">Receipts</h1>
-        {/* PDF download is a dedicated follow-up feature (FEATURES.md #12) */}
-        <p className="text-muted-foreground">
-          PDF download is coming in a dedicated follow-up step.
-        </p>
+        <p className="text-muted-foreground">Download a PDF receipt for any completed payment.</p>
       </div>
       {isLoading ? (
         <Skeleton className="h-40" />
@@ -33,12 +32,17 @@ export function ReceiptsPage() {
                 <div>
                   <p className="font-medium text-foreground">{r.receiptNumber}</p>
                   <p className="text-small text-muted-foreground">
+                    {r.propertyName} · Unit {r.unitNumber}
+                  </p>
+                  <p className="text-caption text-muted-foreground">
                     {new Date(r.issuedAt).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="font-semibold text-foreground">{formatNaira(r.amount)}</span>
-                  <Download className="h-4 w-4 text-muted-foreground" />
+                  <Button size="sm" variant="outline" onClick={() => exportReceiptPDF(r)}>
+                    <Download className="mr-1.5 h-3.5 w-3.5" /> Download
+                  </Button>
                 </div>
               </CardContent>
             </Card>

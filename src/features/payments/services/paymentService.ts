@@ -123,18 +123,76 @@ export async function getPaymentHistory(tenantId: string): Promise<PaymentHistor
   }));
 }
 
+export interface ReceiptItem {
+  id: string;
+  receiptNumber: string;
+  amount: number;
+  issuedAt: string;
+  reference: string;
+  gateway: string;
+  propertyName: string;
+  unitNumber: string;
+  tenantName: string;
+}
+
 export async function getReceipts(tenantId: string): Promise<ReceiptItem[]> {
-  const { data, error } = await supabase
+  const { data: rows, error } = await supabase
     .from('receipts')
-    .select('id, receipt_number, issued_at, payments!inner(amount, tenant_id)')
+    .select(
+      `id, receipt_number, issued_at,
+       payments!inner(amount, reference, gateway, tenant_id, invoice_id)`
+    )
     .eq('payments.tenant_id', tenantId)
     .order('issued_at', { ascending: false });
 
   if (error) throw error;
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    receiptNumber: row.receipt_number,
-    amount: row.payments.amount,
-    issuedAt: row.issued_at,
-  }));
+  if (!rows || rows.length === 0) return [];
+
+  const invoiceIds = Array.from(new Set(rows.map((r: any) => r.payments.invoice_id)));
+  const { data: invoices } = invoiceIds.length
+    ? await supabase.from('invoices').select('id, lease_id').in('id', invoiceIds)
+    : { data: [] as any[] };
+
+  const leaseIds = Array.from(new Set((invoices ?? []).map((i: any) => i.lease_id)));
+  const { data: leases } = leaseIds.length
+    ? await supabase.from('leases').select('id, unit_id').in('id', leaseIds)
+    : { data: [] as any[] };
+
+  const unitIds = Array.from(new Set((leases ?? []).map((l: any) => l.unit_id)));
+  const { data: units } = unitIds.length
+    ? await supabase
+        .from('units')
+        .select('id, unit_number, property_id, properties!inner(property_name)')
+        .in('id', unitIds)
+    : { data: [] as any[] };
+
+  const invoiceLeaseMap = new Map((invoices ?? []).map((i: any) => [i.id, i.lease_id]));
+  const leaseUnitMap = new Map((leases ?? []).map((l: any) => [l.id, l.unit_id]));
+  const unitMap = new Map((units ?? []).map((u: any) => [u.id, u]));
+
+  const { data: tenantRow } = await supabase
+    .from('tenants')
+    .select('profiles!inner(full_name, email)')
+    .eq('id', tenantId)
+    .single();
+  const tenantName =
+    (tenantRow as any)?.profiles?.full_name ?? (tenantRow as any)?.profiles?.email ?? 'Tenant';
+
+  return rows.map((r: any) => {
+    const leaseId = invoiceLeaseMap.get(r.payments.invoice_id);
+    const unitId = leaseId ? leaseUnitMap.get(leaseId) : undefined;
+    const unit = unitId ? unitMap.get(unitId) : undefined;
+
+    return {
+      id: r.id,
+      receiptNumber: r.receipt_number,
+      amount: r.payments.amount,
+      issuedAt: r.issued_at,
+      reference: r.payments.reference,
+      gateway: r.payments.gateway,
+      propertyName: unit?.properties?.property_name ?? 'Unknown',
+      unitNumber: unit?.unit_number ?? '-',
+      tenantName,
+    };
+  });
 }
