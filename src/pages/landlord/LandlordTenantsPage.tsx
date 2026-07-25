@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Wallet } from 'lucide-react';
+import { RecordPaymentDialog } from '@/features/payments/components/RecordPaymentDialog';
 import { useLandlordTenants } from '@/features/tenants/hooks/useTenants';
 
 const statusVariant: Record<string, 'success' | 'secondary' | 'warning' | 'destructive'> = {
@@ -21,6 +23,8 @@ export function LandlordTenantsPage() {
   const { data: tenants, isLoading } = useLandlordTenants();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('all');
+
+  const [paymentTarget, setPaymentTarget] = useState<{ id: string; name: string } | null>(null);
 
   const filtered = tenants?.filter((t) => {
     const matchesSearch =
@@ -82,15 +86,39 @@ export function LandlordTenantsPage() {
                     {t.propertyName} · Unit {t.unitNumber}
                   </p>
                 </div>
-                <Badge variant={statusVariant[t.leaseStatus] ?? 'secondary'} className="capitalize">
-                  {t.leaseStatus}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge
+                    variant={statusVariant[t.leaseStatus] ?? 'secondary'}
+                    className="capitalize"
+                  >
+                    {t.leaseStatus}
+                  </Badge>
+                  {t.leaseStatus === 'active' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      title="Record a cash/offline payment"
+                      onClick={() => setPaymentTarget({ id: t.tenantId, name: t.fullName })}
+                    >
+                      <Wallet className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               </CardContent>
             </Card>
           ))}
         </div>
       ) : (
         <p className="text-muted-foreground">No tenants match your filters.</p>
+      )}
+
+      {paymentTarget && (
+        <RecordPaymentDialog
+          open={!!paymentTarget}
+          onClose={() => setPaymentTarget(null)}
+          tenantId={paymentTarget.id}
+          tenantName={paymentTarget.name}
+        />
       )}
     </div>
   );
