@@ -276,12 +276,11 @@ export function HomePage() {
             'linear-gradient(rgba(37,99,235,0.88), rgba(37,99,235,0.88)), url(https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80)',
         }}
       >
-        <div className="container flex flex-col items-center gap-4 text-center text-white">
+        <div className="container flex flex-col items-center gap-4 text-center">
           <AnimatedSection>
-            <h2 className="text-h3">Are you a landlord or agency?</h2>
-          </AnimatedSection>
-          <AnimatedSection delay={150}>
-            <p className="max-w-lg text-body opacity-90">
+            <h2 className="text-h3 text-white">Are you a landlord or agency?</h2>
+
+            <p className="max-w-lg text-body text-white/90">
               Manage your entire property portfolio, collect rent online, and track everything in
               one dashboard.
             </p>
@@ -293,7 +292,9 @@ export function HomePage() {
               className="bg-white text-foreground hover:bg-white/90"
               asChild
             >
-              <Link to="/register">List Your Property</Link>
+              <Link to="/register" className="text-foreground">
+                List Your Property
+              </Link>
             </Button>
           </AnimatedSection>
         </div>
