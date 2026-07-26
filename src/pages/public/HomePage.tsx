@@ -292,7 +292,7 @@ export function HomePage() {
               className="bg-white text-foreground hover:bg-white/90"
               asChild
             >
-              <Link to="/register" className="text-foreground">
+              <Link to="/register" className="!text-black">
                 List Your Property
               </Link>
             </Button>
