@@ -45,6 +45,13 @@ export function PropertyListingsPage() {
         <PropertyFilters filters={filters} onChange={handleFiltersChange} />
       </div>
 
+      <div className="mb-6">
+        <h2 className="text-h4 text-foreground">Recent Properties</h2>
+        <p className="text-muted-foreground">
+          Explore the latest verified rental properties available now.
+        </p>
+      </div>
+
       {isError && (
         <p className="text-destructive">
           Something went wrong loading properties. Please try again.
