@@ -6,6 +6,7 @@ export interface LandlordLeaseItem {
   id: string;
   leaseNumber: string;
   tenantName: string;
+  tenantProfileId: string;
   propertyName: string;
   unitNumber: string;
   startDate: string;
@@ -203,6 +204,7 @@ export async function getManagerLeases(profileId: string): Promise<LandlordLease
     id: row.id,
     leaseNumber: row.lease_number,
     tenantName: row.tenants.profiles.full_name ?? row.tenants.profiles.email,
+    tenantProfileId: row.tenants.profile_id,
     propertyName: row.units.properties.property_name,
     unitNumber: row.units.unit_number,
     startDate: row.start_date,
@@ -220,7 +222,7 @@ export async function getLandlordLeases(profileId: string): Promise<LandlordLeas
     .select(
       `id, lease_number, start_date, end_date, monthly_rent, status,
        units!inner(unit_number, properties!inner(property_name, landlord_id)),
-       tenants!inner(profiles!inner(full_name, email))`
+       tenants!inner(profile_id, profiles!inner(full_name, email))`
     )
     .eq('units.properties.landlord_id', landlordId)
     .order('created_at', { ascending: false });
@@ -231,6 +233,7 @@ export async function getLandlordLeases(profileId: string): Promise<LandlordLeas
     id: row.id,
     leaseNumber: row.lease_number,
     tenantName: row.tenants.profiles.full_name ?? row.tenants.profiles.email,
+    tenantProfileId: row.tenants.profile_id,
     propertyName: row.units.properties.property_name,
     unitNumber: row.units.unit_number,
     startDate: row.start_date,

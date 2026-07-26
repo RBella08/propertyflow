@@ -1,4 +1,4 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -428,6 +428,35 @@ export type Database = {
             columns: ['profile_id'];
             isOneToOne: true;
             referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      lease_reminders_sent: {
+        Row: {
+          id: string;
+          lease_id: string;
+          sent_at: string;
+          threshold_days: number;
+        };
+        Insert: {
+          id?: string;
+          lease_id: string;
+          sent_at?: string;
+          threshold_days: number;
+        };
+        Update: {
+          id?: string;
+          lease_id?: string;
+          sent_at?: string;
+          threshold_days?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'lease_reminders_sent_lease_id_fkey';
+            columns: ['lease_id'];
+            isOneToOne: false;
+            referencedRelation: 'leases';
             referencedColumns: ['id'];
           },
         ];
@@ -1067,6 +1096,51 @@ export type Database = {
           },
         ];
       };
+      quit_notices: {
+        Row: {
+          created_at: string;
+          id: string;
+          issued_by_profile_id: string;
+          lease_id: string;
+          notice_text: string;
+          reason: string;
+          vacate_by: string;
+        };
+        Insert: {
+          created_at?: string;
+          id?: string;
+          issued_by_profile_id: string;
+          lease_id: string;
+          notice_text: string;
+          reason: string;
+          vacate_by: string;
+        };
+        Update: {
+          created_at?: string;
+          id?: string;
+          issued_by_profile_id?: string;
+          lease_id?: string;
+          notice_text?: string;
+          reason?: string;
+          vacate_by?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'quit_notices_issued_by_profile_id_fkey';
+            columns: ['issued_by_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'quit_notices_lease_id_fkey';
+            columns: ['lease_id'];
+            isOneToOne: false;
+            referencedRelation: 'leases';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       receipts: {
         Row: {
           created_at: string | null;
@@ -1644,9 +1718,11 @@ export type Database = {
     };
     Functions: {
       current_user_role: { Args: never; Returns: string };
+      expire_leases: { Args: never; Returns: undefined };
       get_current_profile_id: { Args: never; Returns: string };
       is_admin: { Args: never; Returns: boolean };
       is_landlord: { Args: never; Returns: boolean };
+      send_lease_reminders: { Args: never; Returns: undefined };
     };
     Enums: {
       inspection_status: 'pending' | 'confirmed' | 'cancelled' | 'completed';

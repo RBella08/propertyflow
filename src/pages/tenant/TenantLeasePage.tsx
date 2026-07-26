@@ -1,5 +1,6 @@
-import { MapPin, Calendar, Wallet, FileSignature } from 'lucide-react';
+import { MapPin, Calendar, Wallet, FileSignature, FileWarning } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuitNoticesForLease } from '@/features/quit-notices/hooks/useQuitNotices';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTenantLeases } from '@/features/leases/hooks/useTenantLeases';
@@ -16,12 +17,13 @@ function formatNaira(amount: number) {
 export function TenantLeasePage() {
   const { data: leases, isLoading, isError } = useTenantLeases();
 
+  const activeLease = leases?.find((l) => l.status === 'active');
+  const { data: quitNotices } = useQuitNoticesForLease(activeLease?.id);
+  const otherLeases = leases?.filter((l) => l.status !== 'active') ?? [];
+
   if (isLoading) return <Skeleton className="h-96" />;
   if (isError)
     return <p className="text-destructive">Couldn&apos;t load your lease information.</p>;
-
-  const activeLease = leases?.find((l) => l.status === 'active');
-  const otherLeases = leases?.filter((l) => l.status !== 'active') ?? [];
 
   return (
     <div className="flex flex-col gap-6">
@@ -94,6 +96,26 @@ export function TenantLeasePage() {
               You don&apos;t currently have an active lease. Contact your landlord if this seems
               incorrect.
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {quitNotices && quitNotices.length > 0 && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-h6 text-destructive">
+              <FileWarning className="h-5 w-5" /> Notice to Quit
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3">
+            {quitNotices.map((n) => (
+              <div key={n.id} className="rounded-md border border-destructive/30 p-3">
+                <p className="text-small text-foreground">{n.noticeText}</p>
+                <p className="mt-1 text-caption text-muted-foreground">
+                  Served {new Date(n.createdAt).toLocaleDateString()}
+                </p>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}

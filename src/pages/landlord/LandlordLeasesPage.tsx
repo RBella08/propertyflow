@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { Plus, RefreshCw, XCircle } from 'lucide-react';
+import { Plus, RefreshCw, XCircle, FileWarning } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -8,6 +8,7 @@ import { useLandlordLeases } from '@/features/leases/hooks/useLeases';
 import { LeaseStatusBadge } from '@/features/leases/components/LeaseStatusBadge';
 import { RenewLeaseDialog } from '@/features/leases/components/RenewLeaseDialog';
 import { TerminateLeaseDialog } from '@/features/leases/components/TerminateLeaseDialog';
+import { ServeQuitNoticeDialog } from '@/features/quit-notices/components/ServeQuitNoticeDialog';
 
 function formatNaira(amount: number) {
   return new Intl.NumberFormat('en-NG', {
@@ -36,6 +37,12 @@ export function LandlordLeasesPage() {
   const [terminateTarget, setTerminateTarget] = useState<{ id: string; number: string } | null>(
     null
   );
+  const [quitTarget, setQuitTarget] = useState<{
+    leaseId: string;
+    tenantProfileId: string;
+    tenantName: string;
+    propertyName: string;
+  } | null>(null);
 
   return (
     <div className="flex flex-col gap-6">
@@ -113,6 +120,22 @@ export function LandlordLeasesPage() {
                       >
                         <XCircle className="h-4 w-4" />
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive"
+                        title="Serve Notice to Quit"
+                        onClick={() =>
+                          setQuitTarget({
+                            leaseId: lease.id,
+                            tenantProfileId: lease.tenantProfileId,
+                            tenantName: lease.tenantName,
+                            propertyName: lease.propertyName,
+                          })
+                        }
+                      >
+                        <FileWarning className="h-4 w-4" />
+                      </Button>
                     </>
                   )}
                 </div>
@@ -143,6 +166,16 @@ export function LandlordLeasesPage() {
         leaseNumber={terminateTarget?.number ?? ''}
         onClose={() => setTerminateTarget(null)}
       />
+      {quitTarget && (
+        <ServeQuitNoticeDialog
+          open={!!quitTarget}
+          onClose={() => setQuitTarget(null)}
+          leaseId={quitTarget.leaseId}
+          tenantProfileId={quitTarget.tenantProfileId}
+          tenantName={quitTarget.tenantName}
+          propertyName={quitTarget.propertyName}
+        />
+      )}
     </div>
   );
 }
