@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AmenitySelector } from './AmenitySelector';
+import { PropertyImageManager } from './PropertyImageManager';
 import { propertySchema, type PropertyFormInput } from '../schemas';
 import { useUpdateProperty } from '../hooks/usePropertyMutations';
 
@@ -115,6 +116,15 @@ export function PropertyEditForm({ propertyId, defaultValues }: PropertyEditForm
         </CardHeader>
         <CardContent>
           <AmenitySelector selected={amenityIds} onChange={(ids) => setValue('amenityIds', ids)} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-h6">Photos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PropertyImageManager propertyId={propertyId} />
         </CardContent>
       </Card>
 

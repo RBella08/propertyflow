@@ -93,17 +93,133 @@ async function generateUniqueSlug(propertyName: string): Promise<string> {
   return candidate;
 }
 
+async function compressImage(file: File, maxWidth = 1600, quality = 0.8): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => reject(new Error('Could not read image'));
+
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = () => reject(new Error('Could not load image'));
+
+    reader.readAsDataURL(file);
+  });
+}
+
 export async function uploadPropertyImage(propertyId: string, file: File): Promise<string> {
-  const fileExt = file.name.split('.').pop();
-  const filePath = `${propertyId}/${crypto.randomUUID()}.${fileExt}`;
+  const compressed = await compressImage(file);
+  const filePath = `${propertyId}/${crypto.randomUUID()}.jpg`;
 
   const { error: uploadError } = await supabase.storage
     .from('property-images')
-    .upload(filePath, file, { cacheControl: '3600', upsert: false });
+    .upload(filePath, compressed, { cacheControl: '3600', upsert: false });
   if (uploadError) throw uploadError;
 
   const { data } = supabase.storage.from('property-images').getPublicUrl(filePath);
   return data.publicUrl;
+}
+
+export async function addPropertyImages(propertyId: string, files: File[]): Promise<void> {
+  if (files.length === 0) return;
+
+  const { data: existingImages } = await supabase
+    .from('property_images')
+    .select('display_order')
+    .eq('property_id', propertyId)
+    .order('display_order', { ascending: false })
+    .limit(1);
+
+  const lastDisplayOrder = existingImages?.[0]?.display_order ?? -1;
+  const startOrder = lastDisplayOrder + 1;
+
+  const uploadedUrls = await Promise.all(
+    files.map((file) => uploadPropertyImage(propertyId, file))
+  );
+
+  const { data: hasCover } = await supabase
+    .from('properties')
+    .select('cover_image')
+    .eq('id', propertyId)
+    .single();
+
+  const imageRows = uploadedUrls.map((url, index) => ({
+    property_id: propertyId,
+    image_url: url,
+    display_order: startOrder + index,
+    is_cover: !hasCover?.cover_image && index === 0,
+  }));
+
+  const { error } = await supabase.from('property_images').insert(imageRows);
+  if (error) throw error;
+
+  if (!hasCover?.cover_image) {
+    await supabase.from('properties').update({ cover_image: uploadedUrls[0] }).eq('id', propertyId);
+  }
+}
+
+export interface PropertyImageItem {
+  id: string;
+  imageUrl: string;
+  isCover: boolean;
+}
+
+export async function getPropertyImages(propertyId: string): Promise<PropertyImageItem[]> {
+  const { data, error } = await supabase
+    .from('property_images')
+    .select('id, image_url, is_cover')
+    .eq('property_id', propertyId)
+    .order('display_order');
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    imageUrl: row.image_url,
+    isCover: row.is_cover ?? false,
+  }));
+}
+
+export async function setPropertyCoverImage(
+  propertyId: string,
+  imageId: string,
+  imageUrl: string
+): Promise<void> {
+  await supabase.from('property_images').update({ is_cover: false }).eq('property_id', propertyId);
+  const { error } = await supabase
+    .from('property_images')
+    .update({ is_cover: true })
+    .eq('id', imageId);
+  if (error) throw error;
+  await supabase.from('properties').update({ cover_image: imageUrl }).eq('id', propertyId);
+}
+
+export async function deletePropertyImage(imageId: string): Promise<void> {
+  const { error } = await supabase.from('property_images').delete().eq('id', imageId);
+  if (error) throw error;
 }
 
 export async function createProperty(

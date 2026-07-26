@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Menu } from 'lucide-react';
 import { NavLink } from 'react-router';
 import { Button } from '@/components/ui/button';
@@ -8,11 +9,12 @@ import { cn } from '@/lib/utils';
 
 export function MobileSidebar() {
   const { role } = useAuth();
+  const [open, setOpen] = useState(false);
   if (!role) return null;
   const items = sidebarNav[role];
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="md:hidden">
           <Menu className="h-5 w-5" />
@@ -28,6 +30,7 @@ export function MobileSidebar() {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={() => setOpen(false)}
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-3 rounded-md px-3 py-2 text-small font-medium hover:bg-accent',

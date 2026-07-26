@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, NavLink } from 'react-router';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { cn } from '@/lib/utils';
 
 export function Navbar() {
   const { isAuthenticated } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur">
@@ -56,7 +58,7 @@ export function Navbar() {
           )}
         </div>
 
-        <Sheet>
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
@@ -73,6 +75,7 @@ export function Navbar() {
                   key={item.path}
                   to={item.path}
                   end={item.path === '/'}
+                  onClick={() => setMobileOpen(false)}
                   className="text-body font-medium text-foreground"
                 >
                   {item.label}
@@ -81,19 +84,19 @@ export function Navbar() {
               <div className="mt-4 flex flex-col gap-2">
                 {isAuthenticated ? (
                   <>
-                    <Button variant="outline" asChild>
+                    <Button variant="outline" asChild onClick={() => setMobileOpen(false)}>
                       <Link to="/favorites">My Favorites</Link>
                     </Button>
-                    <Button asChild>
+                    <Button asChild onClick={() => setMobileOpen(false)}>
                       <Link to="/profile">My Profile</Link>
                     </Button>
                   </>
                 ) : (
                   <>
-                    <Button variant="outline" asChild>
+                    <Button variant="outline" asChild onClick={() => setMobileOpen(false)}>
                       <Link to="/login">Log in</Link>
                     </Button>
-                    <Button asChild>
+                    <Button asChild onClick={() => setMobileOpen(false)}>
                       <Link to="/register">Register</Link>
                     </Button>
                   </>
