@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Mail, Phone } from 'lucide-react';
+import { Mail, Phone, Wallet, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Wallet } from 'lucide-react';
 import { RecordPaymentDialog } from '@/features/payments/components/RecordPaymentDialog';
+import { LeaveScreeningReviewDialog } from '@/features/screening/components/LeaveScreeningReviewDialog';
 import { useLandlordTenants } from '@/features/tenants/hooks/useTenants';
 
 const statusVariant: Record<string, 'success' | 'secondary' | 'warning' | 'destructive'> = {
@@ -25,6 +25,12 @@ export function LandlordTenantsPage() {
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('all');
 
   const [paymentTarget, setPaymentTarget] = useState<{ id: string; name: string } | null>(null);
+
+  const [reviewTarget, setReviewTarget] = useState<{
+    leaseId: string;
+    tenantProfileId: string;
+    name: string;
+  } | null>(null);
 
   const filtered = tenants?.filter((t) => {
     const matchesSearch =
@@ -86,6 +92,7 @@ export function LandlordTenantsPage() {
                     {t.propertyName} · Unit {t.unitNumber}
                   </p>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <Badge
                     variant={statusVariant[t.leaseStatus] ?? 'secondary'}
@@ -93,6 +100,23 @@ export function LandlordTenantsPage() {
                   >
                     {t.leaseStatus}
                   </Badge>
+
+                  {(t.leaseStatus === 'terminated' || t.leaseStatus === 'expired') && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setReviewTarget({
+                          leaseId: t.leaseId,
+                          tenantProfileId: t.tenantProfileId,
+                          name: t.fullName,
+                        })
+                      }
+                    >
+                      <Star className="mr-1.5 h-3.5 w-3.5" /> Leave Review
+                    </Button>
+                  )}
+
                   {t.leaseStatus === 'active' && (
                     <Button
                       size="sm"
@@ -118,6 +142,16 @@ export function LandlordTenantsPage() {
           onClose={() => setPaymentTarget(null)}
           tenantId={paymentTarget.id}
           tenantName={paymentTarget.name}
+        />
+      )}
+
+      {reviewTarget && (
+        <LeaveScreeningReviewDialog
+          open={!!reviewTarget}
+          onClose={() => setReviewTarget(null)}
+          leaseId={reviewTarget.leaseId}
+          tenantProfileId={reviewTarget.tenantProfileId}
+          tenantName={reviewTarget.name}
         />
       )}
     </div>

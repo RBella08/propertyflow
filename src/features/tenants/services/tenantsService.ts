@@ -3,6 +3,8 @@ import { getLandlordId } from '@/features/properties/services/propertyManagement
 
 export interface LandlordTenantItem {
   tenantId: string;
+  tenantProfileId: string;
+  leaseId: string;
   fullName: string;
   email: string;
   phone: string | null;
@@ -30,7 +32,7 @@ export async function getManagerTenants(profileId: string): Promise<LandlordTena
 
   const { data: leases, error } = await supabase
     .from('leases')
-    .select('tenant_id, unit_id, status')
+    .select('id, tenant_id, unit_id, status')
     .in('unit_id', unitIds)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -40,7 +42,7 @@ export async function getManagerTenants(profileId: string): Promise<LandlordTena
 
   const { data: tenants } = await supabase
     .from('tenants')
-    .select('id, profiles!inner(full_name, email, phone)')
+    .select('id, profiles!inner(id, full_name, email, phone)')
     .in('id', tenantIds);
   const tenantMap = new Map((tenants ?? []).map((t: any) => [t.id, t.profiles]));
 
@@ -54,6 +56,8 @@ export async function getManagerTenants(profileId: string): Promise<LandlordTena
     const tenantProfile = tenantMap.get(lease.tenant_id);
     results.push({
       tenantId: lease.tenant_id,
+      tenantProfileId: tenantProfile?.id ?? '',
+      leaseId: lease.id,
       fullName: tenantProfile?.full_name ?? tenantProfile?.email ?? 'Unknown',
       email: tenantProfile?.email ?? '',
       phone: tenantProfile?.phone ?? null,
@@ -87,7 +91,7 @@ export async function getLandlordTenants(profileId: string): Promise<LandlordTen
 
   const { data: leases, error } = await supabase
     .from('leases')
-    .select('tenant_id, unit_id, status')
+    .select('id, tenant_id, unit_id, status')
     .in('unit_id', unitIds)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -97,7 +101,7 @@ export async function getLandlordTenants(profileId: string): Promise<LandlordTen
 
   const { data: tenants } = await supabase
     .from('tenants')
-    .select('id, profiles!inner(full_name, email, phone)')
+    .select('id, profiles!inner(id, full_name, email, phone)')
     .in('id', tenantIds);
   const tenantMap = new Map((tenants ?? []).map((t: any) => [t.id, t.profiles]));
 
@@ -114,6 +118,8 @@ export async function getLandlordTenants(profileId: string): Promise<LandlordTen
 
     results.push({
       tenantId: lease.tenant_id,
+      tenantProfileId: tenantProfile?.id ?? '',
+      leaseId: lease.id,
       fullName: tenantProfile?.full_name ?? tenantProfile?.email ?? 'Unknown',
       email: tenantProfile?.email ?? '',
       phone: tenantProfile?.phone ?? null,

@@ -24,6 +24,7 @@ export interface UnitOption {
 
 export interface TenantLookupResult {
   tenantId: string;
+  profileId: string;
   fullName: string;
   email: string;
 }
@@ -73,6 +74,7 @@ export async function findTenantByEmail(email: string): Promise<TenantLookupResu
 
   return {
     tenantId: tenant.id,
+    profileId: profile.id,
     fullName: profile.full_name ?? profile.email,
     email: profile.email,
   };

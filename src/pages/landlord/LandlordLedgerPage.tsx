@@ -33,6 +33,7 @@ export function LandlordLedgerPage() {
   const [startDate, setStartDate] = useState(getDefaultStartDate());
   const [endDate, setEndDate] = useState(getTodayDate());
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(15);
   const { data: entries, isLoading } = useLandlordLedger(startDate, endDate);
   const { data: properties } = useLandlordPropertyOptionsForAccounting();
 
@@ -82,10 +83,17 @@ export function LandlordLedgerPage() {
         <Skeleton className="h-64" />
       ) : entries && entries.length > 0 ? (
         <div className="flex flex-col gap-2">
-          {entries.map((entry) => (
+          {entries.slice(0, visibleCount).map((entry) => (
             <Card key={`${entry.type}-${entry.id}`}>
               <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
                 <div>
+                  {entries.length > visibleCount && (
+                    <div className="flex justify-center pt-2">
+                      <Button variant="outline" onClick={() => setVisibleCount((c) => c + 15)}>
+                        Load More
+                      </Button>
+                    </div>
+                  )}
                   <p className="text-small font-medium text-foreground">
                     {entry.description || entry.category}
                   </p>

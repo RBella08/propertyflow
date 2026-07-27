@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { TrendingUp, Pencil } from 'lucide-react';
+import { TrendingUp, Percent, Pencil } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useROIData, useUpdatePropertyInvestment } from '@/features/accounting/hooks/useAccounting';
+
+const PAGE_SIZE = 6;
 
 function formatNaira(amount: number) {
   return new Intl.NumberFormat('en-NG', {
@@ -21,9 +23,17 @@ function formatNaira(amount: number) {
 export function ROITrackingPage() {
   const { data: roiData, isLoading } = useROIData();
   const updateInvestment = useUpdatePropertyInvestment();
+  const [search, setSearch] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [editTarget, setEditTarget] = useState<{ id: string; name: string } | null>(null);
   const [purchasePrice, setPurchasePrice] = useState('');
   const [purchaseDate, setPurchaseDate] = useState('');
+
+  const filtered = roiData?.filter((r) =>
+    r.propertyName.toLowerCase().includes(search.toLowerCase())
+  );
+  const visible = filtered?.slice(0, visibleCount);
+  const hasMore = (filtered?.length ?? 0) > visibleCount;
 
   const handleSave = async () => {
     if (!editTarget || !purchasePrice || !purchaseDate) {
@@ -56,8 +66,18 @@ export function ROITrackingPage() {
         </p>
       </div>
 
+      <Input
+        placeholder="Search by property name..."
+        value={search}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setVisibleCount(PAGE_SIZE);
+        }}
+        className="max-w-sm"
+      />
+
       <div className="flex flex-col gap-3">
-        {roiData?.map((r) => (
+        {visible?.map((r) => (
           <Card key={r.propertyId}>
             <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
               <div>
@@ -75,14 +95,19 @@ export function ROITrackingPage() {
                   {formatNaira(r.annualExpenses)} expenses
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {r.roiPercentage !== null ? (
-                  <Badge
-                    variant={r.roiPercentage >= 8 ? 'success' : 'warning'}
-                    className="flex items-center gap-1"
-                  >
-                    <TrendingUp className="h-3 w-3" /> {r.roiPercentage}% ROI
-                  </Badge>
+                  <>
+                    <Badge
+                      variant={r.roiPercentage >= 8 ? 'success' : 'warning'}
+                      className="flex items-center gap-1"
+                    >
+                      <TrendingUp className="h-3 w-3" /> {r.roiPercentage}% Net ROI
+                    </Badge>
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Percent className="h-3 w-3" /> {r.grossYieldPercentage}% Gross Yield
+                    </Badge>
+                  </>
                 ) : (
                   <Badge variant="secondary">Set purchase price</Badge>
                 )}
@@ -101,10 +126,18 @@ export function ROITrackingPage() {
             </CardContent>
           </Card>
         ))}
-        {roiData && roiData.length === 0 && (
-          <p className="text-muted-foreground">No properties yet.</p>
+        {filtered && filtered.length === 0 && (
+          <p className="text-muted-foreground">No properties match your search.</p>
         )}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center">
+          <Button variant="outline" onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
+            Load More
+          </Button>
+        </div>
+      )}
 
       <Dialog open={!!editTarget} onOpenChange={(o) => !o && setEditTarget(null)}>
         <DialogContent>

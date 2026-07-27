@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { findTenantByEmail } from '../services/leaseService';
 
 interface TenantLookupProps {
-  onFound: (tenantId: string, fullName: string) => void;
+  onFound: (tenantId: string, fullName: string, profileId: string) => void;
 }
 
 export function TenantLookup({ onFound }: TenantLookupProps) {
@@ -21,7 +21,7 @@ export function TenantLookup({ onFound }: TenantLookupProps) {
       const result = await findTenantByEmail(email);
       setFoundName(result.fullName);
       setStatus('found');
-      onFound(result.tenantId, result.fullName);
+      onFound(result.tenantId, result.fullName, result.profileId);
     } catch (error) {
       setStatus('error');
       setErrorMessage(error instanceof Error ? error.message : 'Tenant not found');

@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router';
+import { ShieldCheck } from 'lucide-react';
+import { ScreeningHistoryDialog } from '@/features/screening/components/ScreeningHistoryDialog';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +20,12 @@ export function CreateLeasePage() {
   const navigate = useNavigate();
   const { data: units, isLoading: unitsLoading } = useAvailableUnitOptions();
   const createLease = useCreateLease();
+  const [foundTenant, setFoundTenant] = useState<{
+    profileId: string;
+    name: string;
+  } | null>(null);
+
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const {
     register,
@@ -87,7 +96,27 @@ export function CreateLeasePage() {
 
             <div className="flex flex-col gap-2">
               <Label>Tenant</Label>
-              <TenantLookup onFound={(tenantId) => setValue('tenantId', tenantId)} />
+              <TenantLookup
+                onFound={(tenantId, fullName, profileId) => {
+                  setValue('tenantId', tenantId);
+                  setFoundTenant({
+                    profileId,
+                    name: fullName,
+                  });
+                }}
+              />
+
+              {foundTenant && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setHistoryOpen(true)}
+                >
+                  <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+                  Check Rental History
+                </Button>
+              )}
               {errors.tenantId && (
                 <p className="text-caption text-destructive">{errors.tenantId.message}</p>
               )}
@@ -168,6 +197,14 @@ export function CreateLeasePage() {
           </Button>
         </div>
       </form>
+      {foundTenant && (
+        <ScreeningHistoryDialog
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          tenantProfileId={foundTenant.profileId}
+          tenantName={foundTenant.name}
+        />
+      )}
     </div>
   );
 }

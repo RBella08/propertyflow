@@ -1330,6 +1330,64 @@ export type Database = {
         };
         Relationships: [];
       };
+      tenant_screening_reviews: {
+        Row: {
+          comments: string | null;
+          created_at: string;
+          id: string;
+          lease_id: string;
+          payment_reliability: string;
+          property_care: string;
+          reviewer_profile_id: string;
+          tenant_profile_id: string;
+          would_rent_again: boolean;
+        };
+        Insert: {
+          comments?: string | null;
+          created_at?: string;
+          id?: string;
+          lease_id: string;
+          payment_reliability: string;
+          property_care: string;
+          reviewer_profile_id: string;
+          tenant_profile_id: string;
+          would_rent_again: boolean;
+        };
+        Update: {
+          comments?: string | null;
+          created_at?: string;
+          id?: string;
+          lease_id?: string;
+          payment_reliability?: string;
+          property_care?: string;
+          reviewer_profile_id?: string;
+          tenant_profile_id?: string;
+          would_rent_again?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'tenant_screening_reviews_lease_id_fkey';
+            columns: ['lease_id'];
+            isOneToOne: false;
+            referencedRelation: 'leases';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenant_screening_reviews_reviewer_profile_id_fkey';
+            columns: ['reviewer_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'tenant_screening_reviews_tenant_profile_id_fkey';
+            columns: ['tenant_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       tenants: {
         Row: {
           created_at: string | null;
