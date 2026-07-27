@@ -16,6 +16,7 @@ import {
   Shield,
   Megaphone,
   Upload,
+  Calendar,
 } from 'lucide-react';
 import type { UserRole } from '@/types/auth';
 
@@ -32,6 +33,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Payments', path: '/tenant/payments', icon: Wallet },
     { label: 'Receipts', path: '/tenant/receipts', icon: Receipt },
     { label: 'Maintenance', path: '/tenant/maintenance', icon: Wrench },
+    { label: 'Calendar', path: '/tenant/calendar', icon: Calendar },
     { label: 'Notifications', path: '/notifications', icon: Bell },
     { label: 'Announcements', path: '/tenant/announcements', icon: Megaphone },
     { label: 'Profile', path: '/profile', icon: User },
@@ -47,6 +49,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Vendors', path: '/landlord/vendors', icon: Wrench },
     { label: 'Maintenance', path: '/landlord/maintenance', icon: Wrench },
     { label: 'Reports', path: '/landlord/reports', icon: BarChart3 },
+    { label: 'Calendar', path: '/landlord/calendar', icon: Calendar },
     { label: 'Bulk Import', path: '/landlord/bulk-import', icon: Upload },
     { label: 'Payout Settings', path: '/landlord/payout-settings', icon: Wallet },
     { label: 'Notifications', path: '/notifications', icon: Bell },
@@ -61,6 +64,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Leases', path: '/manager/leases', icon: FileText },
     { label: 'Maintenance', path: '/manager/maintenance', icon: Wrench },
     { label: 'Reports', path: '/manager/reports', icon: BarChart3 },
+    { label: 'Calendar', path: '/manager/calendar', icon: Calendar },
     { label: 'Notifications', path: '/notifications', icon: Bell },
     { label: 'Profile', path: '/profile', icon: User },
   ],

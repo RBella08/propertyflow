@@ -20,6 +20,7 @@ import { HomePage } from '@/pages/public/HomePage';
 import { AboutPage } from '@/pages/public/AboutPage';
 import { ContactPage } from '@/pages/public/ContactPage';
 import { FaqPage } from '@/pages/public/FaqPage';
+import { ManagerCalendarPage } from '@/pages/manager/ManagerCalendarPage';
 import { ManagerDashboardPage } from '@/pages/manager/ManagerDashboardPage';
 import { ManagerPropertiesPage } from '@/pages/manager/ManagerPropertiesPage';
 import { ManagerTenantsPage } from '@/pages/manager/ManagerTenantsPage';
@@ -59,6 +60,7 @@ import { EditUnitPage } from '@/pages/landlord/EditUnitPage';
 import { LandlordLeasesPage } from '@/pages/landlord/LandlordLeasesPage';
 import { CreateLeasePage } from '@/pages/landlord/CreateLeasePage';
 import { ReportsPage } from '@/pages/landlord/ReportsPage';
+import { LandlordCalendarPage } from '@/pages/landlord/LandlordCalendarPage';
 import { LandlordDashboardPage } from '@/pages/landlord/LandlordDashboardPage';
 import { LandlordTenantsPage } from '@/pages/landlord/LandlordTenantsPage';
 import { LandlordPaymentsPage } from '@/pages/landlord/LandlordPaymentsPage';
@@ -69,6 +71,7 @@ import { PaymentsPage } from '@/pages/tenant/PaymentsPage';
 import { PayoutSettingsPage } from '@/pages/landlord/PayoutSettingsPage';
 import { ReceiptsPage } from '@/pages/tenant/ReceiptsPage';
 import { TenantAnnouncementsPage } from '@/pages/tenant/TenantAnnouncementsPage';
+import { TenantCalendarPage } from '@/pages/tenant/TenantCalendarPage';
 import { TenantLeasePage } from '@/pages/tenant/TenantLeasePage';
 import { TenantMaintenancePage } from '@/pages/tenant/TenantMaintenancePage';
 import { CreateMaintenancePage } from '@/pages/tenant/CreateMaintenancePage';
@@ -177,6 +180,14 @@ export const router = createBrowserRouter([
         [
           { path: 'tenant/dashboard', title: 'Tenant Dashboard' },
           {
+            path: 'tenant/calendar',
+            element: (
+              <ProtectedRoute allowedRoles={['tenant']}>
+                <TenantCalendarPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'tenant/lease',
             element: (
               <ProtectedRoute allowedRoles={['tenant']}>
@@ -261,6 +272,14 @@ export const router = createBrowserRouter([
               <ProtectedRoute allowedRoles={['landlord']}>
                 {' '}
                 <LandlordDashboardPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'landlord/calendar',
+            element: (
+              <ProtectedRoute allowedRoles={['landlord']}>
+                <LandlordCalendarPage />
               </ProtectedRoute>
             ),
           },
@@ -416,6 +435,14 @@ export const router = createBrowserRouter([
               <ProtectedRoute allowedRoles={['manager']}>
                 {' '}
                 <ManagerDashboardPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/calendar',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerCalendarPage />
               </ProtectedRoute>
             ),
           },

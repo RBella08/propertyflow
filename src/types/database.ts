@@ -1104,6 +1104,8 @@ export type Database = {
           lease_id: string;
           notice_text: string;
           reason: string;
+          revoked_at: string | null;
+          status: string;
           vacate_by: string;
         };
         Insert: {
@@ -1113,6 +1115,8 @@ export type Database = {
           lease_id: string;
           notice_text: string;
           reason: string;
+          revoked_at?: string | null;
+          status?: string;
           vacate_by: string;
         };
         Update: {
@@ -1122,6 +1126,8 @@ export type Database = {
           lease_id?: string;
           notice_text?: string;
           reason?: string;
+          revoked_at?: string | null;
+          status?: string;
           vacate_by?: string;
         };
         Relationships: [

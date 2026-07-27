@@ -56,6 +56,7 @@ export function TenantLeasePage() {
                   </p>
                 </div>
               </div>
+
               <div className="flex items-start gap-3 rounded-md border p-4">
                 <Wallet className="mt-0.5 h-5 w-5 text-primary" />
                 <div>
@@ -65,6 +66,7 @@ export function TenantLeasePage() {
                   </p>
                 </div>
               </div>
+
               <div className="flex items-start gap-3 rounded-md border p-4">
                 <FileSignature className="mt-0.5 h-5 w-5 text-primary" />
                 <div>
@@ -80,6 +82,7 @@ export function TenantLeasePage() {
               <span className="text-muted-foreground">Lease Number</span>
               <span className="font-medium text-foreground">{activeLease.leaseNumber}</span>
             </div>
+
             <div className="flex items-center justify-between rounded-md bg-muted p-3 text-small">
               <span className="text-muted-foreground">Billing Cycle</span>
               <span className="capitalize font-medium text-foreground">
@@ -100,22 +103,59 @@ export function TenantLeasePage() {
         </Card>
       )}
 
-      {quitNotices && quitNotices.length > 0 && (
+      {quitNotices && quitNotices.filter((n) => n.status === 'active').length > 0 && (
         <Card className="border-destructive/40 bg-destructive/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-h6 text-destructive">
-              <FileWarning className="h-5 w-5" /> Notice to Quit
+              <FileWarning className="h-5 w-5" />
+              Notice to Quit
             </CardTitle>
           </CardHeader>
+
           <CardContent className="flex flex-col gap-3">
-            {quitNotices.map((n) => (
-              <div key={n.id} className="rounded-md border border-destructive/30 p-3">
-                <p className="text-small text-foreground">{n.noticeText}</p>
-                <p className="mt-1 text-caption text-muted-foreground">
-                  Served {new Date(n.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
+            {quitNotices
+              .filter((n) => n.status === 'active')
+              .map((n) => (
+                <div key={n.id} className="rounded-md border border-destructive/30 p-3">
+                  <p className="text-small text-foreground">{n.noticeText}</p>
+
+                  <p className="mt-1 text-caption text-muted-foreground">
+                    Served {new Date(n.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {quitNotices && quitNotices.filter((n) => n.status === 'revoked').length > 0 && (
+        <Card className="border-green-300 bg-green-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-h6 text-green-700">
+              Notice Revoked
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="flex flex-col gap-3">
+            {quitNotices
+              .filter((n) => n.status === 'revoked')
+              .map((n) => (
+                <div key={n.id} className="rounded-md border border-green-300 p-3">
+                  <p className="text-small text-foreground">
+                    This Notice to Quit has been revoked by your landlord.
+                  </p>
+
+                  <p className="mt-2 text-caption text-muted-foreground">
+                    Served: {new Date(n.createdAt).toLocaleDateString()}
+                  </p>
+
+                  {n.revokedAt && (
+                    <p className="text-caption text-muted-foreground">
+                      Revoked: {new Date(n.revokedAt).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              ))}
           </CardContent>
         </Card>
       )}
