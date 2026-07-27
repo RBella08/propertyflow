@@ -74,6 +74,10 @@ import { TenantAnnouncementsPage } from '@/pages/tenant/TenantAnnouncementsPage'
 import { TenantCalendarPage } from '@/pages/tenant/TenantCalendarPage';
 import { TenantLeasePage } from '@/pages/tenant/TenantLeasePage';
 import { TenantMaintenancePage } from '@/pages/tenant/TenantMaintenancePage';
+import { LandlordLedgerPage } from '@/pages/landlord/LandlordLedgerPage';
+import { ManagerLedgerPage } from '@/pages/manager/ManagerLedgerPage';
+import { OwnerStatementPage } from '@/pages/landlord/OwnerStatementPage';
+import { ROITrackingPage } from '@/pages/landlord/ROITrackingPage';
 import { CreateMaintenancePage } from '@/pages/tenant/CreateMaintenancePage';
 import { MaintenanceDetailsPage } from '@/pages/tenant/MaintenanceDetailsPage';
 import { LandlordMaintenancePage } from '@/pages/landlord/LandlordMaintenancePage';
@@ -302,6 +306,30 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'landlord/ledger',
+            element: (
+              <ProtectedRoute allowedRoles={['landlord']}>
+                <LandlordLedgerPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'landlord/owner-statement',
+            element: (
+              <ProtectedRoute allowedRoles={['landlord']}>
+                <OwnerStatementPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'landlord/roi',
+            element: (
+              <ProtectedRoute allowedRoles={['landlord']}>
+                <ROITrackingPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'landlord/payout-settings',
             element: (
               <ProtectedRoute allowedRoles={['landlord']}>
@@ -452,6 +480,14 @@ export const router = createBrowserRouter([
               <ProtectedRoute allowedRoles={['manager']}>
                 {' '}
                 <ManagerPropertiesPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/ledger',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerLedgerPage />
               </ProtectedRoute>
             ),
           },

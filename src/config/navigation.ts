@@ -17,6 +17,8 @@ import {
   Megaphone,
   Upload,
   Calendar,
+  BookOpen,
+  TrendingUp,
 } from 'lucide-react';
 import type { UserRole } from '@/types/auth';
 
@@ -50,6 +52,9 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Maintenance', path: '/landlord/maintenance', icon: Wrench },
     { label: 'Reports', path: '/landlord/reports', icon: BarChart3 },
     { label: 'Calendar', path: '/landlord/calendar', icon: Calendar },
+    { label: 'Ledger', path: '/landlord/ledger', icon: BookOpen },
+    { label: 'Owner Statement', path: '/landlord/owner-statement', icon: FileSignature },
+    { label: 'ROI Tracking', path: '/landlord/roi', icon: TrendingUp },
     { label: 'Bulk Import', path: '/landlord/bulk-import', icon: Upload },
     { label: 'Payout Settings', path: '/landlord/payout-settings', icon: Wallet },
     { label: 'Notifications', path: '/notifications', icon: Bell },
@@ -65,6 +70,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Maintenance', path: '/manager/maintenance', icon: Wrench },
     { label: 'Reports', path: '/manager/reports', icon: BarChart3 },
     { label: 'Calendar', path: '/manager/calendar', icon: Calendar },
+    { label: 'Ledger', path: '/manager/ledger', icon: BookOpen },
     { label: 'Notifications', path: '/notifications', icon: Bell },
     { label: 'Profile', path: '/profile', icon: User },
   ],

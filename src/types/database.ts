@@ -906,6 +906,8 @@ export type Database = {
           postal_code: string | null;
           property_name: string;
           property_type: string | null;
+          purchase_date: string | null;
+          purchase_price: number | null;
           slug: string;
           state: string;
           status: Database['public']['Enums']['property_status'] | null;
@@ -933,6 +935,8 @@ export type Database = {
           postal_code?: string | null;
           property_name: string;
           property_type?: string | null;
+          purchase_date?: string | null;
+          purchase_price?: number | null;
           slug: string;
           state: string;
           status?: Database['public']['Enums']['property_status'] | null;
@@ -960,6 +964,8 @@ export type Database = {
           postal_code?: string | null;
           property_name?: string;
           property_type?: string | null;
+          purchase_date?: string | null;
+          purchase_price?: number | null;
           slug?: string;
           state?: string;
           status?: Database['public']['Enums']['property_status'] | null;
@@ -1037,6 +1043,68 @@ export type Database = {
           },
           {
             foreignKeyName: 'property_amenities_property_id_fkey';
+            columns: ['property_id'];
+            isOneToOne: false;
+            referencedRelation: 'public_property_listings';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      property_expenses: {
+        Row: {
+          amount: number;
+          category: string;
+          created_at: string;
+          created_by_profile_id: string;
+          description: string | null;
+          expense_date: string;
+          id: string;
+          property_id: string;
+        };
+        Insert: {
+          amount: number;
+          category: string;
+          created_at?: string;
+          created_by_profile_id: string;
+          description?: string | null;
+          expense_date: string;
+          id?: string;
+          property_id: string;
+        };
+        Update: {
+          amount?: number;
+          category?: string;
+          created_at?: string;
+          created_by_profile_id?: string;
+          description?: string | null;
+          expense_date?: string;
+          id?: string;
+          property_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'property_expenses_created_by_profile_id_fkey';
+            columns: ['created_by_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'property_expenses_property_id_fkey';
+            columns: ['property_id'];
+            isOneToOne: false;
+            referencedRelation: 'occupancy_statistics';
+            referencedColumns: ['property_id'];
+          },
+          {
+            foreignKeyName: 'property_expenses_property_id_fkey';
+            columns: ['property_id'];
+            isOneToOne: false;
+            referencedRelation: 'properties';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'property_expenses_property_id_fkey';
             columns: ['property_id'];
             isOneToOne: false;
             referencedRelation: 'public_property_listings';
