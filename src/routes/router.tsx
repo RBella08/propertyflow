@@ -65,6 +65,7 @@ import { LandlordDashboardPage } from '@/pages/landlord/LandlordDashboardPage';
 import { LandlordTenantsPage } from '@/pages/landlord/LandlordTenantsPage';
 import { LandlordPaymentsPage } from '@/pages/landlord/LandlordPaymentsPage';
 import { ProfilePage } from '@/pages/shared/ProfilePage';
+import { IdVerificationPage } from '@/pages/tenant/IdVerificationPage';
 import { SettingsPage } from '@/pages/shared/SettingsPage';
 import { PayRentPage } from '@/pages/tenant/PayRentPage';
 import { PaymentsPage } from '@/pages/tenant/PaymentsPage';
@@ -188,6 +189,14 @@ export const router = createBrowserRouter([
             element: (
               <ProtectedRoute allowedRoles={['tenant']}>
                 <TenantCalendarPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'tenant/id-verification',
+            element: (
+              <ProtectedRoute allowedRoles={['tenant']}>
+                <IdVerificationPage />
               </ProtectedRoute>
             ),
           },

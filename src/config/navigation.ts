@@ -19,6 +19,7 @@ import {
   Calendar,
   BookOpen,
   TrendingUp,
+  FileCheck,
 } from 'lucide-react';
 import type { UserRole } from '@/types/auth';
 
@@ -36,6 +37,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Receipts', path: '/tenant/receipts', icon: Receipt },
     { label: 'Maintenance', path: '/tenant/maintenance', icon: Wrench },
     { label: 'Calendar', path: '/tenant/calendar', icon: Calendar },
+    { label: 'ID Verification', path: '/tenant/id-verification', icon: FileCheck },
     { label: 'Notifications', path: '/notifications', icon: Bell },
     { label: 'Announcements', path: '/tenant/announcements', icon: Megaphone },
     { label: 'Profile', path: '/profile', icon: User },

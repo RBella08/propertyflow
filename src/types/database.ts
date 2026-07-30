@@ -229,6 +229,57 @@ export type Database = {
         };
         Relationships: [];
       };
+      id_verifications: {
+        Row: {
+          document_type: string;
+          document_url: string;
+          id: string;
+          review_note: string | null;
+          reviewed_at: string | null;
+          reviewed_by_profile_id: string | null;
+          status: string;
+          submitted_at: string;
+          tenant_profile_id: string;
+        };
+        Insert: {
+          document_type: string;
+          document_url: string;
+          id?: string;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by_profile_id?: string | null;
+          status?: string;
+          submitted_at?: string;
+          tenant_profile_id: string;
+        };
+        Update: {
+          document_type?: string;
+          document_url?: string;
+          id?: string;
+          review_note?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by_profile_id?: string | null;
+          status?: string;
+          submitted_at?: string;
+          tenant_profile_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'id_verifications_reviewed_by_profile_id_fkey';
+            columns: ['reviewed_by_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'id_verifications_tenant_profile_id_fkey';
+            columns: ['tenant_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       inspections: {
         Row: {
           assigned_to: string | null;

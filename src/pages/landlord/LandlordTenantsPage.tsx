@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Mail, Phone, Wallet, Star } from 'lucide-react';
+import { Mail, Phone, Wallet, Star, FileCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ReviewDocumentDialog } from '@/features/id-verification/components/ReviewDocumentDialog';
 import { RecordPaymentDialog } from '@/features/payments/components/RecordPaymentDialog';
 import { LeaveScreeningReviewDialog } from '@/features/screening/components/LeaveScreeningReviewDialog';
 import { useLandlordTenants } from '@/features/tenants/hooks/useTenants';
@@ -29,6 +30,11 @@ export function LandlordTenantsPage() {
   const [reviewTarget, setReviewTarget] = useState<{
     leaseId: string;
     tenantProfileId: string;
+    name: string;
+  } | null>(null);
+
+  const [reviewDocsTarget, setReviewDocsTarget] = useState<{
+    profileId: string;
     name: string;
   } | null>(null);
 
@@ -98,6 +104,20 @@ export function LandlordTenantsPage() {
                     variant={statusVariant[t.leaseStatus] ?? 'secondary'}
                     className="capitalize"
                   >
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        setReviewDocsTarget({
+                          profileId: t.tenantProfileId,
+                          name: t.fullName,
+                        })
+                      }
+                    >
+                      <FileCheck className="mr-1.5 h-3.5 w-3.5" />
+                      ID Docs
+                    </Button>
+
                     {t.leaseStatus}
                   </Badge>
 
@@ -152,6 +172,15 @@ export function LandlordTenantsPage() {
           leaseId={reviewTarget.leaseId}
           tenantProfileId={reviewTarget.tenantProfileId}
           tenantName={reviewTarget.name}
+        />
+      )}
+
+      {reviewDocsTarget && (
+        <ReviewDocumentDialog
+          open={!!reviewDocsTarget}
+          onClose={() => setReviewDocsTarget(null)}
+          tenantProfileId={reviewDocsTarget.profileId}
+          tenantName={reviewDocsTarget.name}
         />
       )}
     </div>
