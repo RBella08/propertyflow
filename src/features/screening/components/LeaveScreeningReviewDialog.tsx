@@ -51,11 +51,12 @@ export function LeaveScreeningReviewDialog({
       reset();
       onClose();
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String((error as any)?.message ?? '');
       toast.error('Could not submit review', {
-        description:
-          error instanceof Error && error.message.includes('duplicate')
-            ? "You've already reviewed this tenant for this lease."
-            : 'Something went wrong',
+        description: message.includes('duplicate')
+          ? "You've already reviewed this tenant for this lease."
+          : 'Something went wrong',
       });
     }
   };
