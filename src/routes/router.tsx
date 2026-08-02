@@ -71,6 +71,7 @@ import { PayRentPage } from '@/pages/tenant/PayRentPage';
 import { PaymentsPage } from '@/pages/tenant/PaymentsPage';
 import { PayoutSettingsPage } from '@/pages/landlord/PayoutSettingsPage';
 import { ReceiptsPage } from '@/pages/tenant/ReceiptsPage';
+import { TenancyAgreementPage } from '@/pages/tenant/TenancyAgreementPage';
 import { TenantAnnouncementsPage } from '@/pages/tenant/TenantAnnouncementsPage';
 import { TenantCalendarPage } from '@/pages/tenant/TenantCalendarPage';
 import { TenantLeasePage } from '@/pages/tenant/TenantLeasePage';
@@ -184,6 +185,15 @@ export const router = createBrowserRouter([
         ['tenant'],
         [
           { path: 'tenant/dashboard', title: 'Tenant Dashboard' },
+          {
+            path: 'tenant/agreement',
+            element: (
+              <ProtectedRoute allowedRoles={['tenant']}>
+                <TenancyAgreementPage />
+              </ProtectedRoute>
+            ),
+          },
+
           {
             path: 'tenant/calendar',
             element: (

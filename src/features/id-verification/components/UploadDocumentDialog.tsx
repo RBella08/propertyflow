@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Upload } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -30,6 +30,19 @@ export function UploadDocumentDialog({ open, onClose }: UploadDocumentDialogProp
   const submitVerification = useSubmitVerification();
   const [documentType, setDocumentType] = useState<DocumentType>('nin_slip');
   const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const handleFileChange = (selected: File | null) => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setFile(selected);
+    setPreviewUrl(
+      selected && selected.type.startsWith('image/') ? URL.createObjectURL(selected) : null
+    );
+  };
+
+  const handleClear = () => {
+    handleFileChange(null);
+  };
 
   const handleSubmit = async () => {
     if (!file) {
@@ -39,7 +52,7 @@ export function UploadDocumentDialog({ open, onClose }: UploadDocumentDialogProp
     try {
       await submitVerification.mutateAsync({ documentType, file });
       toast.success('Document submitted', { description: 'Your landlord will review it shortly.' });
-      setFile(null);
+      handleClear();
       onClose();
     } catch (error) {
       toast.error('Could not submit document', {
@@ -54,7 +67,8 @@ export function UploadDocumentDialog({ open, onClose }: UploadDocumentDialogProp
         <DialogHeader>
           <DialogTitle>Upload ID Document</DialogTitle>
           <DialogDescription>
-            Visible only to you, your landlord/manager, and platform admins.
+            Visible only to you, your landlord/manager, and platform admins. Review your file
+            carefully before submitting — you can remove and reselect if it's wrong.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4 pt-2">
@@ -73,19 +87,47 @@ export function UploadDocumentDialog({ open, onClose }: UploadDocumentDialogProp
               ))}
             </select>
           </div>
-          <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-input p-6 text-center hover:bg-accent">
-            <Upload className="h-6 w-6 text-muted-foreground" />
-            <p className="text-small text-muted-foreground">
-              {file ? file.name : 'Click to select a photo (JPG, PNG, or PDF)'}
-            </p>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/jpg,application/pdf"
-              className="hidden"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-          </label>
-          <Button onClick={handleSubmit} loading={submitVerification.isPending}>
+
+          {!file ? (
+            <label className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-card border-2 border-dashed border-input p-6 text-center hover:bg-accent">
+              <Upload className="h-6 w-6 text-muted-foreground" />
+              <p className="text-small text-muted-foreground">
+                Click to select a photo (JPG, PNG, or PDF)
+              </p>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/jpg,application/pdf"
+                className="hidden"
+                onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          ) : (
+            <div className="relative rounded-card border p-3">
+              <button
+                type="button"
+                onClick={handleClear}
+                className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 hover:bg-accent"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Selected document preview"
+                  className="mx-auto max-h-64 rounded-md object-contain"
+                />
+              ) : (
+                <p className="py-8 text-center text-small text-muted-foreground">
+                  {file.name} (PDF)
+                </p>
+              )}
+              <p className="mt-2 text-center text-caption text-muted-foreground">
+                Not the right file? Click the X above to remove and choose again.
+              </p>
+            </div>
+          )}
+
+          <Button onClick={handleSubmit} loading={submitVerification.isPending} disabled={!file}>
             Submit for Review
           </Button>
         </div>
