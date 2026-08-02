@@ -42,6 +42,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Announcements', path: '/tenant/announcements', icon: Megaphone },
     { label: 'Profile', path: '/profile', icon: User },
     { label: 'Settings', path: '/settings', icon: Settings },
+    { label: 'Tenancy Agreement', path: '/tenant/agreement', icon: FileSignature },
   ],
   landlord: [
     { label: 'Dashboard', path: '/landlord/dashboard', icon: LayoutDashboard },

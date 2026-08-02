@@ -169,6 +169,14 @@ export async function createLease(input: LeaseFormInput): Promise<void> {
       'Lease created and unit marked occupied, but the first invoice failed to generate. Please create it manually.'
     );
   }
+
+  // Auto-create the pending tenancy agreement — best-effort, doesn't
+  // block lease creation if it fails for any reason.
+  try {
+    await supabase.from('lease_agreements').insert({ lease_id: lease.id });
+  } catch (agreementError) {
+    console.error('Failed to auto-create tenancy agreement:', agreementError);
+  }
 }
 
 export async function getAvailableUnitOptionsForManager(profileId: string): Promise<UnitOption[]> {

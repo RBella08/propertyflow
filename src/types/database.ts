@@ -483,6 +483,62 @@ export type Database = {
           },
         ];
       };
+      lease_agreements: {
+        Row: {
+          created_at: string;
+          guarantor_address: string | null;
+          guarantor_email: string | null;
+          guarantor_name: string | null;
+          guarantor_phone: string | null;
+          guarantor_relationship: string | null;
+          id: string;
+          lease_id: string;
+          rules_acknowledged: boolean;
+          signature_data: string | null;
+          signed_at: string | null;
+          status: string;
+          typed_name: string | null;
+        };
+        Insert: {
+          created_at?: string;
+          guarantor_address?: string | null;
+          guarantor_email?: string | null;
+          guarantor_name?: string | null;
+          guarantor_phone?: string | null;
+          guarantor_relationship?: string | null;
+          id?: string;
+          lease_id: string;
+          rules_acknowledged?: boolean;
+          signature_data?: string | null;
+          signed_at?: string | null;
+          status?: string;
+          typed_name?: string | null;
+        };
+        Update: {
+          created_at?: string;
+          guarantor_address?: string | null;
+          guarantor_email?: string | null;
+          guarantor_name?: string | null;
+          guarantor_phone?: string | null;
+          guarantor_relationship?: string | null;
+          id?: string;
+          lease_id?: string;
+          rules_acknowledged?: boolean;
+          signature_data?: string | null;
+          signed_at?: string | null;
+          status?: string;
+          typed_name?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'lease_agreements_lease_id_fkey';
+            columns: ['lease_id'];
+            isOneToOne: true;
+            referencedRelation: 'leases';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       lease_reminders_sent: {
         Row: {
           id: string;

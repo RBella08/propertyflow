@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { Mail, Phone, Wallet, Star, FileCheck } from 'lucide-react';
+import { Mail, Phone, FileCheck, FileSignature, Wallet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ReviewDocumentDialog } from '@/features/id-verification/components/ReviewDocumentDialog';
-import { RecordPaymentDialog } from '@/features/payments/components/RecordPaymentDialog';
-import { LeaveScreeningReviewDialog } from '@/features/screening/components/LeaveScreeningReviewDialog';
 import { useLandlordTenants } from '@/features/tenants/hooks/useTenants';
+import { RecordPaymentDialog } from '@/features/payments/components/RecordPaymentDialog';
+import { ReviewDocumentDialog } from '@/features/id-verification/components/ReviewDocumentDialog';
+import { LeaveScreeningReviewDialog } from '@/features/screening/components/LeaveScreeningReviewDialog';
+import { ViewAgreementDialog } from '@/features/agreements/components/ViewAgreementDialog';
 
 const statusVariant: Record<string, 'success' | 'secondary' | 'warning' | 'destructive'> = {
   active: 'success',
@@ -26,15 +27,14 @@ export function LandlordTenantsPage() {
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('all');
 
   const [paymentTarget, setPaymentTarget] = useState<{ id: string; name: string } | null>(null);
-
+  const [reviewDocsTarget, setReviewDocsTarget] = useState<{
+    profileId: string;
+    name: string;
+  } | null>(null);
+  const [agreementTarget, setAgreementTarget] = useState<string | null>(null);
   const [reviewTarget, setReviewTarget] = useState<{
     leaseId: string;
     tenantProfileId: string;
-    name: string;
-  } | null>(null);
-
-  const [reviewDocsTarget, setReviewDocsTarget] = useState<{
-    profileId: string;
     name: string;
   } | null>(null);
 
@@ -81,7 +81,7 @@ export function LandlordTenantsPage() {
         <div className="flex flex-col gap-3">
           {filtered.map((t) => (
             <Card key={t.tenantId}>
-              <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
+              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="font-medium text-foreground">{t.fullName}</p>
                   <p className="flex flex-wrap items-center gap-3 text-small text-muted-foreground">
@@ -99,27 +99,38 @@ export function LandlordTenantsPage() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Badge
                     variant={statusVariant[t.leaseStatus] ?? 'secondary'}
                     className="capitalize"
                   >
+                    {t.leaseStatus}
+                  </Badge>
+
+                  {t.leaseStatus === 'active' && (
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
-                        setReviewDocsTarget({
-                          profileId: t.tenantProfileId,
-                          name: t.fullName,
-                        })
-                      }
+                      title="Record a cash/offline payment"
+                      onClick={() => setPaymentTarget({ id: t.tenantId, name: t.fullName })}
                     >
-                      <FileCheck className="mr-1.5 h-3.5 w-3.5" />
-                      ID Docs
+                      <Wallet className="mr-1.5 h-3.5 w-3.5" /> Record Payment
                     </Button>
+                  )}
 
-                    {t.leaseStatus}
-                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setReviewDocsTarget({ profileId: t.tenantProfileId, name: t.fullName })
+                    }
+                  >
+                    <FileCheck className="mr-1.5 h-3.5 w-3.5" /> ID Docs
+                  </Button>
+
+                  <Button size="sm" variant="outline" onClick={() => setAgreementTarget(t.leaseId)}>
+                    <FileSignature className="mr-1.5 h-3.5 w-3.5" /> Agreement
+                  </Button>
 
                   {(t.leaseStatus === 'terminated' || t.leaseStatus === 'expired') && (
                     <Button
@@ -133,18 +144,7 @@ export function LandlordTenantsPage() {
                         })
                       }
                     >
-                      <Star className="mr-1.5 h-3.5 w-3.5" /> Leave Review
-                    </Button>
-                  )}
-
-                  {t.leaseStatus === 'active' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      title="Record a cash/offline payment"
-                      onClick={() => setPaymentTarget({ id: t.tenantId, name: t.fullName })}
-                    >
-                      <Wallet className="h-3.5 w-3.5" />
+                      Leave Review
                     </Button>
                   )}
                 </div>
@@ -165,6 +165,23 @@ export function LandlordTenantsPage() {
         />
       )}
 
+      {reviewDocsTarget && (
+        <ReviewDocumentDialog
+          open={!!reviewDocsTarget}
+          onClose={() => setReviewDocsTarget(null)}
+          tenantProfileId={reviewDocsTarget.profileId}
+          tenantName={reviewDocsTarget.name}
+        />
+      )}
+
+      {agreementTarget && (
+        <ViewAgreementDialog
+          open={!!agreementTarget}
+          onClose={() => setAgreementTarget(null)}
+          leaseId={agreementTarget}
+        />
+      )}
+
       {reviewTarget && (
         <LeaveScreeningReviewDialog
           open={!!reviewTarget}
@@ -172,15 +189,6 @@ export function LandlordTenantsPage() {
           leaseId={reviewTarget.leaseId}
           tenantProfileId={reviewTarget.tenantProfileId}
           tenantName={reviewTarget.name}
-        />
-      )}
-
-      {reviewDocsTarget && (
-        <ReviewDocumentDialog
-          open={!!reviewDocsTarget}
-          onClose={() => setReviewDocsTarget(null)}
-          tenantProfileId={reviewDocsTarget.profileId}
-          tenantName={reviewDocsTarget.name}
         />
       )}
     </div>
