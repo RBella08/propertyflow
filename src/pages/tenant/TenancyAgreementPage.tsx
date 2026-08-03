@@ -52,7 +52,14 @@ async function getLandlordProfileIdForLease(leaseId: string): Promise<string> {
     .select('profile_id')
     .eq('id', property.landlord_id)
     .single();
-  if (landlordError) throw new Error(`Could not find landlord details: ${landlordError.message}`);
+
+  if (landlordError) {
+    throw new Error(`Could not find landlord details: ${landlordError.message}`);
+  }
+
+  if (!landlord.profile_id) {
+    throw new Error('Landlord profile ID is missing.');
+  }
 
   return landlord.profile_id;
 }
