@@ -1087,6 +1087,13 @@ export type Database = {
             foreignKeyName: 'properties_landlord_id_fkey';
             columns: ['landlord_id'];
             isOneToOne: false;
+            referencedRelation: 'landlord_basic_info';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'properties_landlord_id_fkey';
+            columns: ['landlord_id'];
+            isOneToOne: false;
             referencedRelation: 'landlord_dashboard_summary';
             referencedColumns: ['landlord_id'];
           },
@@ -1705,6 +1712,13 @@ export type Database = {
             foreignKeyName: 'vendors_landlord_id_fkey';
             columns: ['landlord_id'];
             isOneToOne: false;
+            referencedRelation: 'landlord_basic_info';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'vendors_landlord_id_fkey';
+            columns: ['landlord_id'];
+            isOneToOne: false;
             referencedRelation: 'landlord_dashboard_summary';
             referencedColumns: ['landlord_id'];
           },
@@ -1768,6 +1782,29 @@ export type Database = {
             columns: ['property_id'];
             isOneToOne: false;
             referencedRelation: 'public_property_listings';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      landlord_basic_info: {
+        Row: {
+          id: string | null;
+          profile_id: string | null;
+        };
+        Insert: {
+          id?: string | null;
+          profile_id?: string | null;
+        };
+        Update: {
+          id?: string | null;
+          profile_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'landlords_profile_id_fkey';
+            columns: ['profile_id'];
+            isOneToOne: true;
+            referencedRelation: 'profiles';
             referencedColumns: ['id'];
           },
         ];

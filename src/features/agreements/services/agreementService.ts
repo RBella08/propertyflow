@@ -66,7 +66,9 @@ export async function getMyActiveLeaseAgreement(
     .from('leases')
     .select('id')
     .eq('tenant_id', tenantId)
-    .eq('status', 'active')
+    .in('status', ['active', 'renewed'])
+    .order('created_at', { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (leaseError) throw leaseError;

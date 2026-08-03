@@ -65,12 +65,12 @@ export function IdVerificationPage() {
                     </a>
                   )}
                   <VerificationStatusBadge status={v.status} />
-                  {v.status === 'pending' && (
+                  {(v.status === 'pending' || v.status === 'rejected') && (
                     <Button
                       size="sm"
                       variant="ghost"
                       className="text-destructive"
-                      title="Remove this document and choose a different one"
+                      title="Remove this document"
                       onClick={() =>
                         deleteVerification.mutate({
                           verificationId: v.id,

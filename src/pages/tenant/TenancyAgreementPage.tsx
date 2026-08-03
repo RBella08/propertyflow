@@ -48,7 +48,7 @@ async function getLandlordProfileIdForLease(leaseId: string): Promise<string> {
   if (property.manager_id) return property.manager_id;
 
   const { data: landlord, error: landlordError } = await supabase
-    .from('landlords')
+    .from('landlord_basic_info')
     .select('profile_id')
     .eq('id', property.landlord_id)
     .single();
