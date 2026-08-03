@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { VerificationStatusBadge } from '@/features/id-verification/components/VerificationStatusBadge';
 import { UploadDocumentDialog } from '@/features/id-verification/components/UploadDocumentDialog';
-import { useMyVerifications } from '@/features/id-verification/hooks/useIdVerification';
+import {
+  useMyVerifications,
+  useDeletePendingVerification,
+} from '@/features/id-verification/hooks/useIdVerification';
 
 const DOCUMENT_LABELS: Record<string, string> = {
   nin_slip: 'NIN Slip',
@@ -17,6 +20,7 @@ const DOCUMENT_LABELS: Record<string, string> = {
 
 export function IdVerificationPage() {
   const { data: verifications, isLoading } = useMyVerifications();
+  const deleteVerification = useDeletePendingVerification();
   const [uploadOpen, setUploadOpen] = useState(false);
 
   return (
@@ -61,6 +65,22 @@ export function IdVerificationPage() {
                     </a>
                   )}
                   <VerificationStatusBadge status={v.status} />
+                  {v.status === 'pending' && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive"
+                      title="Remove this document and choose a different one"
+                      onClick={() =>
+                        deleteVerification.mutate({
+                          verificationId: v.id,
+                          documentPath: v.documentPath,
+                        })
+                      }
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

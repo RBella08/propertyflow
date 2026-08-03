@@ -16,15 +16,7 @@ export interface AgreementDetail {
   status: string;
 }
 
-export async function getAgreementForLease(leaseId: string): Promise<AgreementDetail | null> {
-  const { data, error } = await supabase
-    .from('lease_agreements')
-    .select('*')
-    .eq('lease_id', leaseId)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) return null;
-
+function mapAgreement(data: any): AgreementDetail {
   return {
     id: data.id,
     leaseId: data.lease_id,
@@ -41,29 +33,57 @@ export async function getAgreementForLease(leaseId: string): Promise<AgreementDe
   };
 }
 
+export async function getAgreementForLease(leaseId: string): Promise<AgreementDetail | null> {
+  const { data, error } = await supabase
+    .from('lease_agreements')
+    .select('*')
+    .eq('lease_id', leaseId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return mapAgreement(data);
+}
+
+// Safety net for leases created before agreements were auto-created —
+// creates the missing row on the spot instead of leaving the tenant stuck.
+async function ensureAgreementExists(leaseId: string): Promise<AgreementDetail> {
+  const existing = await getAgreementForLease(leaseId);
+  if (existing) return existing;
+
+  const { data, error } = await supabase
+    .from('lease_agreements')
+    .insert({ lease_id: leaseId })
+    .select('*')
+    .single();
+  if (error) throw error;
+  return mapAgreement(data);
+}
+
 export async function getMyActiveLeaseAgreement(
   tenantId: string
-): Promise<{ leaseId: string; agreement: AgreementDetail | null } | null> {
-  const { data: lease } = await supabase
+): Promise<{ leaseId: string; agreement: AgreementDetail } | null> {
+  const { data: lease, error: leaseError } = await supabase
     .from('leases')
     .select('id')
     .eq('tenant_id', tenantId)
     .eq('status', 'active')
     .maybeSingle();
 
+  if (leaseError) throw leaseError;
   if (!lease) return null;
 
-  const agreement = await getAgreementForLease(lease.id);
+  const agreement = await ensureAgreementExists(lease.id);
   return { leaseId: lease.id, agreement };
 }
 
 export async function hasApprovedIdDocument(tenantProfileId: string): Promise<boolean> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('id_verifications')
     .select('id')
     .eq('tenant_profile_id', tenantProfileId)
     .in('status', ['pending', 'approved'])
     .limit(1);
+  if (error) throw error;
   return !!data && data.length > 0;
 }
 

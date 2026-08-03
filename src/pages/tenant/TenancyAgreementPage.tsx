@@ -24,30 +24,37 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
 async function getLandlordProfileIdForLease(leaseId: string): Promise<string> {
-  const { data: lease } = await supabase
+  const { data: lease, error: leaseError } = await supabase
     .from('leases')
     .select('unit_id')
     .eq('id', leaseId)
     .single();
-  const { data: unit } = await supabase
+  if (leaseError) throw new Error(`Could not find lease details: ${leaseError.message}`);
+
+  const { data: unit, error: unitError } = await supabase
     .from('units')
     .select('property_id')
-    .eq('id', lease!.unit_id)
+    .eq('id', lease.unit_id)
     .single();
-  const { data: property } = await supabase
+  if (unitError) throw new Error(`Could not find unit details: ${unitError.message}`);
+
+  const { data: property, error: propertyError } = await supabase
     .from('properties')
     .select('landlord_id, manager_id')
-    .eq('id', unit!.property_id)
+    .eq('id', unit.property_id)
     .single();
+  if (propertyError) throw new Error(`Could not find property details: ${propertyError.message}`);
 
-  if (property?.manager_id) return property.manager_id;
+  if (property.manager_id) return property.manager_id;
 
-  const { data: landlord } = await supabase
+  const { data: landlord, error: landlordError } = await supabase
     .from('landlords')
     .select('profile_id')
-    .eq('id', property!.landlord_id)
+    .eq('id', property.landlord_id)
     .single();
-  return landlord!.profile_id;
+  if (landlordError) throw new Error(`Could not find landlord details: ${landlordError.message}`);
+
+  return landlord.profile_id;
 }
 
 export function TenancyAgreementPage() {
@@ -75,7 +82,10 @@ export function TenancyAgreementPage() {
       toast.error('Please sign in the signature box before submitting');
       return;
     }
-    if (!result?.agreement) return;
+    if (!result?.agreement) {
+      toast.error('Could not find your agreement record. Please refresh and try again.');
+      return;
+    }
 
     try {
       const landlordProfileId = await getLandlordProfileIdForLease(result.leaseId);
@@ -86,8 +96,11 @@ export function TenancyAgreementPage() {
         signatureDataUrl,
       });
       toast.success('Agreement signed successfully');
-    } catch {
-      toast.error('Could not submit agreement');
+    } catch (error) {
+      // Shows the real, specific reason instead of a generic message
+      toast.error('Could not submit agreement', {
+        description: error instanceof Error ? error.message : 'Unknown error — please try again.',
+      });
     }
   };
 
@@ -97,7 +110,7 @@ export function TenancyAgreementPage() {
     return <p className="text-muted-foreground">No active lease found.</p>;
   }
 
-  if (result.agreement?.status === 'signed') {
+  if (result.agreement.status === 'signed') {
     return (
       <div className="mx-auto flex max-w-2xl flex-col items-center gap-3 py-16 text-center">
         <CheckCircle className="h-10 w-10 text-success" />

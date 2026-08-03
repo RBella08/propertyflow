@@ -22,11 +22,20 @@ export function SignaturePad({ onChange }: SignaturePadProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="rounded-md border bg-background">
+      <p className="text-caption text-muted-foreground">Draw your signature below:</p>
+      <div
+        className="overflow-hidden rounded-md border-2 border-input"
+        style={{ backgroundColor: '#ffffff' }}
+      >
         <SignatureCanvas
           ref={padRef}
-          penColor="black"
-          canvasProps={{ className: 'w-full h-40 rounded-md' }}
+          penColor="#0F172A"
+          minWidth={2}
+          maxWidth={4}
+          canvasProps={{
+            className: 'w-full h-40',
+            style: { backgroundColor: '#ffffff' },
+          }}
           onEnd={handleEnd}
         />
       </div>

@@ -4,6 +4,7 @@ import {
   getMyVerifications,
   getTenantVerifications,
   reviewVerification,
+  deletePendingVerification,
   type DocumentType,
 } from '../services/idVerificationService';
 import { useAuthContext } from '@/providers/AuthProvider';
@@ -55,5 +56,20 @@ export function useReviewVerification() {
         queryKey: ['tenant-verifications', variables.tenantProfileId],
       });
     },
+  });
+}
+
+export function useDeletePendingVerification() {
+  const { profile } = useAuthContext();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      verificationId,
+      documentPath,
+    }: {
+      verificationId: string;
+      documentPath: string;
+    }) => deletePendingVerification(verificationId, documentPath),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-verifications', profile?.id] }),
   });
 }

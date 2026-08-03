@@ -5,16 +5,12 @@ export type DocumentType = 'nin_slip' | 'bvn_slip' | 'passport' | 'drivers_licen
 export interface VerificationItem {
   id: string;
   documentType: DocumentType;
+  documentPath: string;
   status: string;
   reviewNote: string | null;
   submittedAt: string;
   reviewedAt: string | null;
   signedUrl: string | null;
-}
-
-export interface TenantVerificationItem extends VerificationItem {
-  tenantProfileId: string;
-  tenantName: string;
 }
 
 async function getSignedUrl(path: string): Promise<string | null> {
@@ -55,6 +51,7 @@ export async function getMyVerifications(tenantProfileId: string): Promise<Verif
     (data ?? []).map(async (v) => ({
       id: v.id,
       documentType: v.document_type as DocumentType,
+      documentPath: v.document_url,
       status: v.status,
       reviewNote: v.review_note,
       submittedAt: v.submitted_at,
@@ -76,6 +73,7 @@ export async function getTenantVerifications(tenantProfileId: string): Promise<V
     (data ?? []).map(async (v) => ({
       id: v.id,
       documentType: v.document_type as DocumentType,
+      documentPath: v.document_url,
       status: v.status,
       reviewNote: v.review_note,
       submittedAt: v.submitted_at,
@@ -112,4 +110,17 @@ export async function reviewVerification(
         : `Your submitted document was not approved.${note ? ` Reason: ${note}` : ''}`,
     type: 'announcement',
   });
+}
+
+export async function deletePendingVerification(
+  verificationId: string,
+  documentPath: string
+): Promise<void> {
+  const { error: storageError } = await supabase.storage
+    .from('id-documents')
+    .remove([documentPath]);
+  if (storageError) throw storageError;
+
+  const { error } = await supabase.from('id_verifications').delete().eq('id', verificationId);
+  if (error) throw error;
 }
