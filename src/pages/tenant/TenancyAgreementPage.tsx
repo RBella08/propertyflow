@@ -66,13 +66,25 @@ async function getLandlordProfileIdForLease(leaseId: string): Promise<string> {
 
 export function TenancyAgreementPage() {
   const { profile } = useAuthContext();
-  const { data: tenantIdResult } = useQuery({
+
+  const {
+    data: tenantIdResult,
+    isLoading: tenantIdLoading,
+    isError: tenantIdError,
+    error: tenantIdErrorObj,
+  } = useQuery({
     queryKey: ['tenant-id-for-agreement', profile?.id],
     queryFn: () => getTenantId(profile!.id),
     enabled: !!profile?.id,
   });
 
-  const { data: result, isLoading } = useMyActiveLeaseAgreement(tenantIdResult);
+  const {
+    data: result,
+    isLoading: agreementLoading,
+    isError: agreementError,
+    error: agreementErrorObj,
+  } = useMyActiveLeaseAgreement(tenantIdResult);
+
   const { data: hasIdDoc } = useHasApprovedIdDocument(profile?.id);
   const signAgreement = useSignAgreement();
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
@@ -104,18 +116,47 @@ export function TenancyAgreementPage() {
       });
       toast.success('Agreement signed successfully');
     } catch (error) {
-      // Shows the real, specific reason instead of a generic message
       toast.error('Could not submit agreement', {
         description: error instanceof Error ? error.message : 'Unknown error — please try again.',
       });
     }
   };
 
-  if (isLoading) return <Skeleton className="h-96" />;
+  // --- Precise diagnostic states, so we know exactly what's wrong ---
+  if (tenantIdLoading) return <Skeleton className="h-96" />;
+
+  if (tenantIdError) {
+    return (
+      <p className="text-destructive">
+        Could not find your tenant record:{' '}
+        {tenantIdErrorObj instanceof Error ? tenantIdErrorObj.message : 'Unknown error'}
+      </p>
+    );
+  }
+
+  if (!tenantIdResult) {
+    return <p className="text-muted-foreground">No tenant record found on your account.</p>;
+  }
+
+  if (agreementLoading) return <Skeleton className="h-96" />;
+
+  if (agreementError) {
+    return (
+      <p className="text-destructive">
+        Error loading your lease:{' '}
+        {agreementErrorObj instanceof Error ? agreementErrorObj.message : 'Unknown error'}
+      </p>
+    );
+  }
 
   if (!result) {
-    return <p className="text-muted-foreground">No active lease found.</p>;
+    return (
+      <p className="text-muted-foreground">
+        No active or renewed lease found on your tenant record (tenant ID: {tenantIdResult}).
+      </p>
+    );
   }
+  // --- end diagnostics ---
 
   if (result.agreement.status === 'signed') {
     return (
