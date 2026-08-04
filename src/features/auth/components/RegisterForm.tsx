@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordStrengthMeter } from './PasswordStrengthMeter';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import {
@@ -22,6 +23,7 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -76,7 +78,13 @@ export function RegisterForm() {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="password">Password</Label>
-            <PasswordInput id="password" {...register('password')} error={!!errors.password} />
+            <Input
+              id="password"
+              type="password"
+              {...register('password')}
+              error={!!errors.password}
+            />
+            <PasswordStrengthMeter password={watch('password') ?? ''} />
             {errors.password && (
               <p className="text-caption text-destructive">{errors.password.message}</p>
             )}

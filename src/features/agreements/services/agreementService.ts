@@ -39,13 +39,11 @@ export async function getAgreementForLease(leaseId: string): Promise<AgreementDe
     .select('*')
     .eq('lease_id', leaseId)
     .maybeSingle();
-  if (error) throw error;
+  if (error) throw new Error(`Failed to load agreement: ${error.message}`);
   if (!data) return null;
   return mapAgreement(data);
 }
 
-// Safety net for leases created before agreements were auto-created —
-// creates the missing row on the spot instead of leaving the tenant stuck.
 async function ensureAgreementExists(leaseId: string): Promise<AgreementDetail> {
   const existing = await getAgreementForLease(leaseId);
   if (existing) return existing;
@@ -55,7 +53,7 @@ async function ensureAgreementExists(leaseId: string): Promise<AgreementDetail> 
     .insert({ lease_id: leaseId })
     .select('*')
     .single();
-  if (error) throw error;
+  if (error) throw new Error(`Failed to create agreement record: ${error.message}`);
   return mapAgreement(data);
 }
 
@@ -71,7 +69,7 @@ export async function getMyActiveLeaseAgreement(
     .limit(1)
     .maybeSingle();
 
-  if (leaseError) throw leaseError;
+  if (leaseError) throw new Error(`Failed to load lease: ${leaseError.message}`);
   if (!lease) return null;
 
   const agreement = await ensureAgreementExists(lease.id);

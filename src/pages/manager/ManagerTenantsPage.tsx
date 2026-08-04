@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { MessageSquare } from 'lucide-react';
+import { MessageTenantDialog } from '@/features/tenants/components/MessageTenantDialog';
 import { useManagerTenants } from '@/features/tenants/hooks/useTenants';
 import { RecordPaymentDialog } from '@/features/payments/components/RecordPaymentDialog';
 import { ReviewDocumentDialog } from '@/features/id-verification/components/ReviewDocumentDialog';
@@ -38,6 +40,9 @@ export function ManagerTenantsPage() {
     name: string;
   } | null>(null);
 
+  const [messageTarget, setMessageTarget] = useState<{ profileId: string; name: string } | null>(
+    null
+  );
   const filtered = tenants?.filter((t) => {
     const matchesSearch =
       t.fullName.toLowerCase().includes(search.toLowerCase()) ||
@@ -132,6 +137,16 @@ export function ManagerTenantsPage() {
                     <FileSignature className="mr-1.5 h-3.5 w-3.5" /> Agreement
                   </Button>
 
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setMessageTarget({ profileId: t.tenantProfileId, name: t.fullName })
+                    }
+                  >
+                    <MessageSquare className="mr-1.5 h-3.5 w-3.5" /> Message
+                  </Button>
+
                   {(t.leaseStatus === 'terminated' || t.leaseStatus === 'expired') && (
                     <Button
                       size="sm"
@@ -189,6 +204,15 @@ export function ManagerTenantsPage() {
           leaseId={reviewTarget.leaseId}
           tenantProfileId={reviewTarget.tenantProfileId}
           tenantName={reviewTarget.name}
+        />
+      )}
+
+      {messageTarget && (
+        <MessageTenantDialog
+          open={!!messageTarget}
+          onClose={() => setMessageTarget(null)}
+          tenantProfileId={messageTarget.profileId}
+          tenantName={messageTarget.name}
         />
       )}
     </div>
