@@ -20,6 +20,7 @@ import {
   BookOpen,
   TrendingUp,
   FileCheck,
+  MessageSquare,
 } from 'lucide-react';
 import type { UserRole } from '@/types/auth';
 
@@ -37,6 +38,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Receipts', path: '/tenant/receipts', icon: Receipt },
     { label: 'Maintenance', path: '/tenant/maintenance', icon: Wrench },
     { label: 'Calendar', path: '/tenant/calendar', icon: Calendar },
+    { label: 'Messages', path: '/tenant/messages', icon: MessageSquare },
     { label: 'ID Verification', path: '/tenant/id-verification', icon: FileCheck },
     { label: 'Notifications', path: '/notifications', icon: Bell },
     { label: 'Announcements', path: '/tenant/announcements', icon: Megaphone },
@@ -55,6 +57,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Maintenance', path: '/landlord/maintenance', icon: Wrench },
     { label: 'Reports', path: '/landlord/reports', icon: BarChart3 },
     { label: 'Calendar', path: '/landlord/calendar', icon: Calendar },
+    { label: 'Messages', path: '/landlord/messages', icon: MessageSquare },
     { label: 'Ledger', path: '/landlord/ledger', icon: BookOpen },
     { label: 'Owner Statement', path: '/landlord/owner-statement', icon: FileSignature },
     { label: 'ROI Tracking', path: '/landlord/roi', icon: TrendingUp },
@@ -74,6 +77,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Reports', path: '/manager/reports', icon: BarChart3 },
     { label: 'Calendar', path: '/manager/calendar', icon: Calendar },
     { label: 'Ledger', path: '/manager/ledger', icon: BookOpen },
+    { label: 'Messages', path: '/manager/messages', icon: MessageSquare },
     { label: 'Notifications', path: '/notifications', icon: Bell },
     { label: 'Profile', path: '/profile', icon: User },
   ],

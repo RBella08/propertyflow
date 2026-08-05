@@ -229,6 +229,58 @@ export type Database = {
         };
         Relationships: [];
       };
+      direct_messages: {
+        Row: {
+          body: string;
+          created_at: string;
+          id: string;
+          lease_id: string;
+          read_at: string | null;
+          recipient_profile_id: string;
+          sender_profile_id: string;
+        };
+        Insert: {
+          body: string;
+          created_at?: string;
+          id?: string;
+          lease_id: string;
+          read_at?: string | null;
+          recipient_profile_id: string;
+          sender_profile_id: string;
+        };
+        Update: {
+          body?: string;
+          created_at?: string;
+          id?: string;
+          lease_id?: string;
+          read_at?: string | null;
+          recipient_profile_id?: string;
+          sender_profile_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'direct_messages_lease_id_fkey';
+            columns: ['lease_id'];
+            isOneToOne: false;
+            referencedRelation: 'leases';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'direct_messages_recipient_profile_id_fkey';
+            columns: ['recipient_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'direct_messages_sender_profile_id_fkey';
+            columns: ['sender_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       id_verifications: {
         Row: {
           document_type: string;

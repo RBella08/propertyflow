@@ -70,7 +70,9 @@ export async function getTenantDashboardData(profileId: string): Promise<TenantD
       .from('leases')
       .select('id, lease_number, start_date, end_date, monthly_rent, status')
       .eq('tenant_id', tenantId)
-      .eq('status', 'active')
+      .in('status', ['active', 'renewed'])
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle(),
     supabase
       .from('invoices')

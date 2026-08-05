@@ -78,12 +78,7 @@ export function RegisterForm() {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              {...register('password')}
-              error={!!errors.password}
-            />
+            <PasswordInput id="password" {...register('password')} error={!!errors.password} />
             <PasswordStrengthMeter password={watch('password') ?? ''} />
             {errors.password && (
               <p className="text-caption text-destructive">{errors.password.message}</p>

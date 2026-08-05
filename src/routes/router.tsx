@@ -76,6 +76,9 @@ import { TenantAnnouncementsPage } from '@/pages/tenant/TenantAnnouncementsPage'
 import { TenantCalendarPage } from '@/pages/tenant/TenantCalendarPage';
 import { TenantLeasePage } from '@/pages/tenant/TenantLeasePage';
 import { TenantMaintenancePage } from '@/pages/tenant/TenantMaintenancePage';
+import { MessagesPage } from '@/pages/tenant/MessagesPage';
+import { ConversationsPage } from '@/pages/landlord/ConversationsPage';
+import { ManagerConversationsPage } from '@/pages/manager/ManagerConversationsPage';
 import { LandlordLedgerPage } from '@/pages/landlord/LandlordLedgerPage';
 import { ManagerLedgerPage } from '@/pages/manager/ManagerLedgerPage';
 import { OwnerStatementPage } from '@/pages/landlord/OwnerStatementPage';
@@ -203,6 +206,14 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: 'tenant/messages',
+            element: (
+              <ProtectedRoute allowedRoles={['tenant']}>
+                <MessagesPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: 'tenant/id-verification',
             element: (
               <ProtectedRoute allowedRoles={['tenant']}>
@@ -321,6 +332,14 @@ export const router = createBrowserRouter([
               <ProtectedRoute allowedRoles={['landlord']}>
                 {' '}
                 <CreatePropertyPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'landlord/messages',
+            element: (
+              <ProtectedRoute allowedRoles={['landlord']}>
+                <ConversationsPage />
               </ProtectedRoute>
             ),
           },
@@ -499,6 +518,14 @@ export const router = createBrowserRouter([
               <ProtectedRoute allowedRoles={['manager']}>
                 {' '}
                 <ManagerPropertiesPage />{' '}
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: 'manager/messages',
+            element: (
+              <ProtectedRoute allowedRoles={['manager']}>
+                <ManagerConversationsPage />
               </ProtectedRoute>
             ),
           },

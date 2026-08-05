@@ -17,9 +17,9 @@ function formatNaira(amount: number) {
 export function TenantLeasePage() {
   const { data: leases, isLoading, isError } = useTenantLeases();
 
-  const activeLease = leases?.find((l) => l.status === 'active');
+  const activeLease = leases?.find((l) => l.status === 'active' || l.status === 'renewed');
   const { data: quitNotices } = useQuitNoticesForLease(activeLease?.id);
-  const otherLeases = leases?.filter((l) => l.status !== 'active') ?? [];
+  const otherLeases = leases?.filter((l) => l.status !== 'active' && l.status !== 'renewed') ?? [];
 
   if (isLoading) return <Skeleton className="h-96" />;
   if (isError)
