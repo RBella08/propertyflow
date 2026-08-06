@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { getLandlordId } from '@/features/properties/services/propertyManagementService';
 import type { LeaseFormInput } from '../schemas';
+import { sendEmailToProfile } from '@/lib/emailNotify';
 
 export interface LandlordLeaseItem {
   id: string;
@@ -177,6 +178,20 @@ export async function createLease(input: LeaseFormInput): Promise<void> {
   } catch (agreementError) {
     console.error('Failed to auto-create tenancy agreement:', agreementError);
   }
+
+  const { data: tenantRow } = await supabase
+    .from('tenants')
+    .select('profile_id')
+    .eq('id', input.tenantId)
+    .single();
+
+  if (tenantRow) {
+    sendEmailToProfile(
+      tenantRow.profile_id,
+      'Your Lease Has Been Created — PropertyFlow',
+      `<p>Hello,</p><p>A new lease has been created for you. Log in to PropertyFlow to view the details and complete your tenancy agreement.</p>`
+    );
+  }
 }
 
 export async function getAvailableUnitOptionsForManager(profileId: string): Promise<UnitOption[]> {
@@ -259,6 +274,25 @@ export async function renewLease(leaseId: string, newEndDate: string): Promise<v
     .update({ end_date: newEndDate, status: 'renewed' })
     .eq('id', leaseId);
   if (error) throw error;
+  const { data: lease } = await supabase
+    .from('leases')
+    .select('tenant_id')
+    .eq('id', leaseId)
+    .single();
+  if (lease) {
+    const { data: tenantRow } = await supabase
+      .from('tenants')
+      .select('profile_id')
+      .eq('id', lease.tenant_id)
+      .single();
+    if (tenantRow) {
+      sendEmailToProfile(
+        tenantRow.profile_id,
+        'Your Lease Has Been Renewed — PropertyFlow',
+        `<p>Hello,</p><p>Your lease has been renewed. New end date: ${newEndDate}.</p>`
+      );
+    }
+  }
 }
 
 export async function terminateLease(leaseId: string): Promise<void> {
@@ -302,6 +336,12 @@ export async function terminateLease(leaseId: string): Promise<void> {
           'Your lease has been terminated by your landlord. Contact them if you have questions.',
         type: 'lease_expiry',
       });
+
+      sendEmailToProfile(
+        tenant.profile_id,
+        'Your Lease Has Been Terminated — PropertyFlow',
+        `<p>Hello,</p><p>Your lease has been terminated by your landlord. Please contact them if you have questions.</p>`
+      );
     }
   } catch (notifyError) {
     console.error('Failed to notify tenant of lease termination:', notifyError);

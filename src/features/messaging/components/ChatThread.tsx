@@ -9,13 +9,13 @@ import { useAuthContext } from '@/providers/AuthProvider';
 
 interface ChatThreadProps {
   leaseId: string;
-  recipientProfileId: string;
+  counterpartProfileId: string;
   otherPersonName: string;
 }
 
-export function ChatThread({ leaseId, recipientProfileId, otherPersonName }: ChatThreadProps) {
+export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: ChatThreadProps) {
   const { profile } = useAuthContext();
-  const { data: messages, isLoading } = useLeaseMessages(leaseId);
+  const { data: messages, isLoading } = useLeaseMessages(leaseId, counterpartProfileId);
   const sendMessage = useSendMessage();
   const [body, setBody] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -27,7 +27,7 @@ export function ChatThread({ leaseId, recipientProfileId, otherPersonName }: Cha
   const handleSend = () => {
     if (!body.trim()) return;
     sendMessage.mutate(
-      { leaseId, recipientProfileId, body: body.trim() },
+      { leaseId, recipientProfileId: counterpartProfileId, body: body.trim() },
       { onSuccess: () => setBody('') }
     );
   };

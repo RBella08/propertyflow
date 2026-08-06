@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { sendEmailToProfile } from '@/lib/emailNotify';
 import type { Database } from '@/types/database';
 
 type PaymentStatus = Database['public']['Enums']['payment_status'];
@@ -100,6 +101,12 @@ export async function updatePaymentStatus(
             message: `Your payment of ₦${payment.amount.toLocaleString()} has been confirmed.`,
             type: 'payment_success',
           });
+
+          sendEmailToProfile(
+            tenant.profile_id,
+            'Payment Confirmed — PropertyFlow',
+            `<p>Your payment of ₦${payment.amount.toLocaleString()} has been confirmed.</p>`
+          );
         }
       }
     } catch (notifyError) {

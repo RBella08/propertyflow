@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Mail, Phone, FileCheck, FileSignature, Wallet, Link } from 'lucide-react';
+import { Link } from 'react-router';
+import { Mail, Phone, FileCheck, FileSignature, Wallet, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquare } from 'lucide-react';
 import { useLandlordTenants } from '@/features/tenants/hooks/useTenants';
 import { RecordPaymentDialog } from '@/features/payments/components/RecordPaymentDialog';
 import { ReviewDocumentDialog } from '@/features/id-verification/components/ReviewDocumentDialog';
@@ -20,7 +20,7 @@ const statusVariant: Record<string, 'success' | 'secondary' | 'warning' | 'destr
   terminated: 'destructive',
 };
 
-const STATUS_FILTERS = ['all', 'active', 'terminated', 'expired'] as const;
+const STATUS_FILTERS = ['all', 'active', 'renewed', 'terminated', 'expired'] as const;
 
 export function LandlordTenantsPage() {
   const { data: tenants, isLoading } = useLandlordTenants();
@@ -28,7 +28,6 @@ export function LandlordTenantsPage() {
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('all');
 
   const [paymentTarget, setPaymentTarget] = useState<{ id: string; name: string } | null>(null);
-
   const [reviewDocsTarget, setReviewDocsTarget] = useState<{
     profileId: string;
     name: string;
@@ -62,7 +61,7 @@ export function LandlordTenantsPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((status) => (
             <Button
               key={status}
@@ -109,7 +108,7 @@ export function LandlordTenantsPage() {
                     {t.leaseStatus}
                   </Badge>
 
-                  {t.leaseStatus === 'active' && (
+                  {(t.leaseStatus === 'active' || t.leaseStatus === 'renewed') && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -172,7 +171,6 @@ export function LandlordTenantsPage() {
           tenantName={paymentTarget.name}
         />
       )}
-
       {reviewDocsTarget && (
         <ReviewDocumentDialog
           open={!!reviewDocsTarget}
@@ -181,7 +179,6 @@ export function LandlordTenantsPage() {
           tenantName={reviewDocsTarget.name}
         />
       )}
-
       {agreementTarget && (
         <ViewAgreementDialog
           open={!!agreementTarget}
@@ -189,7 +186,6 @@ export function LandlordTenantsPage() {
           leaseId={agreementTarget}
         />
       )}
-
       {reviewTarget && (
         <LeaveScreeningReviewDialog
           open={!!reviewTarget}

@@ -27,7 +27,9 @@ export function ConversationsPage() {
             conversations.map((c) => (
               <Card
                 key={c.leaseId}
-                className={`cursor-pointer transition-colors hover:bg-accent ${activeLeaseId === c.leaseId ? 'border-primary' : ''}`}
+                className={`cursor-pointer transition-colors hover:bg-accent ${
+                  activeLeaseId === c.leaseId ? 'border-primary' : ''
+                }`}
                 onClick={() => setActiveLeaseId(c.leaseId)}
               >
                 <CardContent className="flex items-center justify-between gap-2 p-3">
@@ -51,7 +53,7 @@ export function ConversationsPage() {
           {active ? (
             <ChatThread
               leaseId={active.leaseId}
-              recipientProfileId={active.otherPersonProfileId}
+              counterpartProfileId={active.otherPersonProfileId}
               otherPersonName={active.otherPersonName}
             />
           ) : (

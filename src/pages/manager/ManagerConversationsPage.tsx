@@ -18,7 +18,9 @@ export function ManagerConversationsPage() {
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-h4 text-foreground">Messages</h1>
-        <p className="text-muted-foreground">Direct conversations with your tenants.</p>
+        <p className="text-muted-foreground">
+          Direct conversations with tenants of your assigned properties.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -27,7 +29,9 @@ export function ManagerConversationsPage() {
             conversations.map((c) => (
               <Card
                 key={c.leaseId}
-                className={`cursor-pointer transition-colors hover:bg-accent ${activeLeaseId === c.leaseId ? 'border-primary' : ''}`}
+                className={`cursor-pointer transition-colors hover:bg-accent ${
+                  activeLeaseId === c.leaseId ? 'border-primary' : ''
+                }`}
                 onClick={() => setActiveLeaseId(c.leaseId)}
               >
                 <CardContent className="flex items-center justify-between gap-2 p-3">
@@ -51,7 +55,7 @@ export function ManagerConversationsPage() {
           {active ? (
             <ChatThread
               leaseId={active.leaseId}
-              recipientProfileId={active.otherPersonProfileId}
+              counterpartProfileId={active.otherPersonProfileId}
               otherPersonName={active.otherPersonName}
             />
           ) : (

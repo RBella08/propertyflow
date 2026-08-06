@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { sendEmailToProfile } from '@/lib/emailNotify';
 import type { QuitNoticeFormInput } from '../schemas';
 
 export interface QuitNoticeItem {
@@ -40,6 +41,7 @@ export async function serveQuitNotice(
     vacate_by: input.vacateBy,
     notice_text: noticeText,
   });
+
   if (error) throw error;
 
   await supabase.from('notifications').insert({
@@ -48,6 +50,12 @@ export async function serveQuitNotice(
     message: noticeText,
     type: 'lease_expiry',
   });
+
+  sendEmailToProfile(
+    tenantProfileId,
+    'Notice to Quit Received — PropertyFlow',
+    `<p>${noticeText}</p>`
+  );
 }
 
 export async function getQuitNoticesForLease(leaseId: string): Promise<QuitNoticeItem[]> {
@@ -91,4 +99,10 @@ export async function revokeQuitNotice(
     message: `Your landlord has revoked the previous Notice to Quit for ${propertyName}. You may disregard it.`,
     type: 'lease_expiry',
   });
+
+  sendEmailToProfile(
+    tenantProfileId,
+    'Notice to Quit Revoked — PropertyFlow',
+    `<p>Your landlord has revoked the previous Notice to Quit for ${propertyName}. You may disregard it.</p>`
+  );
 }

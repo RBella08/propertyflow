@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Mail, Phone, FileCheck, FileSignature, Wallet, Link } from 'lucide-react';
+import { Link } from 'react-router';
+import { Mail, Phone, FileCheck, FileSignature, Wallet, MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquare } from 'lucide-react';
 import { useManagerTenants } from '@/features/tenants/hooks/useTenants';
 import { RecordPaymentDialog } from '@/features/payments/components/RecordPaymentDialog';
 import { ReviewDocumentDialog } from '@/features/id-verification/components/ReviewDocumentDialog';
@@ -20,7 +20,7 @@ const statusVariant: Record<string, 'success' | 'secondary' | 'warning' | 'destr
   terminated: 'destructive',
 };
 
-const STATUS_FILTERS = ['all', 'active', 'terminated', 'expired'] as const;
+const STATUS_FILTERS = ['all', 'active', 'renewed', 'terminated', 'expired'] as const;
 
 export function ManagerTenantsPage() {
   const { data: tenants, isLoading } = useManagerTenants();
@@ -61,7 +61,7 @@ export function ManagerTenantsPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((status) => (
             <Button
               key={status}
@@ -108,7 +108,7 @@ export function ManagerTenantsPage() {
                     {t.leaseStatus}
                   </Badge>
 
-                  {t.leaseStatus === 'active' && (
+                  {(t.leaseStatus === 'active' || t.leaseStatus === 'renewed') && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -171,7 +171,6 @@ export function ManagerTenantsPage() {
           tenantName={paymentTarget.name}
         />
       )}
-
       {reviewDocsTarget && (
         <ReviewDocumentDialog
           open={!!reviewDocsTarget}
@@ -180,7 +179,6 @@ export function ManagerTenantsPage() {
           tenantName={reviewDocsTarget.name}
         />
       )}
-
       {agreementTarget && (
         <ViewAgreementDialog
           open={!!agreementTarget}
@@ -188,7 +186,6 @@ export function ManagerTenantsPage() {
           leaseId={agreementTarget}
         />
       )}
-
       {reviewTarget && (
         <LeaveScreeningReviewDialog
           open={!!reviewTarget}

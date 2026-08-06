@@ -991,6 +991,7 @@ export type Database = {
           full_name: string | null;
           gender: string | null;
           id: string;
+          is_verified: boolean;
           last_login: string | null;
           last_name: string | null;
           phone: string | null;
@@ -1013,6 +1014,7 @@ export type Database = {
           full_name?: string | null;
           gender?: string | null;
           id?: string;
+          is_verified?: boolean;
           last_login?: string | null;
           last_name?: string | null;
           phone?: string | null;
@@ -1035,6 +1037,7 @@ export type Database = {
           full_name?: string | null;
           gender?: string | null;
           id?: string;
+          is_verified?: boolean;
           last_login?: string | null;
           last_name?: string | null;
           phone?: string | null;

@@ -3,26 +3,30 @@ import type { UserRole } from '@/types/auth';
 
 export interface AdminUserItem {
   id: string;
+  userId: string;
   fullName: string;
   email: string;
   role: UserRole;
   status: string;
+  isVerified: boolean;
   createdAt: string;
 }
 
 export async function getAllUsers(): Promise<AdminUserItem[]> {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, role, status, created_at')
+    .select('id, user_id, full_name, email, role, status, is_verified, created_at')
     .order('created_at', { ascending: false });
   if (error) throw error;
 
   return (data ?? []).map((u) => ({
     id: u.id,
+    userId: u.user_id,
     fullName: u.full_name ?? u.email,
     email: u.email,
     role: u.role,
     status: u.status ?? 'inactive',
+    isVerified: u.is_verified,
     createdAt: u.created_at ?? '',
   }));
 }
@@ -38,6 +42,24 @@ export async function updateUserStatus(
 export async function updateUserRole(userId: string, role: UserRole): Promise<void> {
   const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
   if (error) throw error;
+}
+
+export async function toggleUserVerification(userId: string, isVerified: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('profiles')
+    .update({ is_verified: isVerified })
+    .eq('id', userId);
+
+  if (error) throw error;
+}
+
+export async function deleteUserAccount(authUserId: string): Promise<void> {
+  const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+    body: { targetUserId: authUserId },
+  });
+
+  if (error) throw error;
+  if (!data.success) throw new Error(data.message);
 }
 
 export interface AuditLogItem {
@@ -63,6 +85,7 @@ export async function getAuditLogs(limit = 100): Promise<AuditLogItem[]> {
   const userIds = Array.from(
     new Set((logs ?? []).map((l) => l.user_id).filter((id): id is string => id !== null))
   );
+
   const { data: profiles } = userIds.length
     ? await supabase.from('profiles').select('user_id, email').in('user_id', userIds)
     : { data: [] as { user_id: string; email: string }[] };

@@ -8,6 +8,7 @@ import { ContactManagerDialog } from '@/features/properties/components/ContactMa
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { VerifiedBadge } from '@/features/verification/components/VerifiedBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { NotFoundPage } from '@/pages/errors/NotFoundPage';
 
@@ -108,6 +109,8 @@ export function PropertyDetailsPage() {
         <div>
           <Card className="sticky top-24">
             <CardContent className="flex flex-col gap-4 p-6">
+              <p className="text-small text-muted-foreground">Listed by {property.landlordName}</p>
+              {property.landlordVerified && <VerifiedBadge />}
               <Badge variant="secondary" className="w-fit capitalize">
                 {property.propertyType}
               </Badge>

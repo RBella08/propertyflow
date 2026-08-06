@@ -10,19 +10,27 @@ export interface ChatMessage {
 
 export interface ChatConversation {
   leaseId: string;
-  otherPersonName: string;
   otherPersonProfileId: string;
+  otherPersonName: string;
+  otherPersonRole: string;
   propertyName: string;
   lastMessage: string | null;
   lastMessageAt: string | null;
   unreadCount: number;
 }
 
-export async function getMessagesForLease(leaseId: string): Promise<ChatMessage[]> {
+export async function getMessagesForConversation(
+  leaseId: string,
+  myProfileId: string,
+  counterpartProfileId: string
+): Promise<ChatMessage[]> {
   const { data, error } = await supabase
     .from('direct_messages')
     .select('id, sender_profile_id, body, created_at, read_at')
     .eq('lease_id', leaseId)
+    .or(
+      `and(sender_profile_id.eq.${myProfileId},recipient_profile_id.eq.${counterpartProfileId}),and(sender_profile_id.eq.${counterpartProfileId},recipient_profile_id.eq.${myProfileId})`
+    )
     .order('created_at', { ascending: true });
   if (error) throw error;
 
@@ -57,19 +65,68 @@ export async function sendMessage(
   });
 }
 
-export async function markMessagesRead(leaseId: string, myProfileId: string): Promise<void> {
+export async function markMessagesRead(
+  leaseId: string,
+  myProfileId: string,
+  counterpartProfileId: string
+): Promise<void> {
   await supabase
     .from('direct_messages')
     .update({ read_at: new Date().toISOString() })
     .eq('lease_id', leaseId)
     .eq('recipient_profile_id', myProfileId)
+    .eq('sender_profile_id', counterpartProfileId)
     .is('read_at', null);
 }
 
-export async function getTenantConversation(
+async function buildConversation(
+  leaseId: string,
+  counterpartProfileId: string,
+  myProfileId: string,
+  propertyName: string,
+  roleLabel: string
+): Promise<ChatConversation> {
+  const { data: otherProfile } = await supabase
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', counterpartProfileId)
+    .maybeSingle();
+
+  const { data: messages } = await supabase
+    .from('direct_messages')
+    .select('body, created_at')
+    .eq('lease_id', leaseId)
+    .or(
+      `and(sender_profile_id.eq.${myProfileId},recipient_profile_id.eq.${counterpartProfileId}),and(sender_profile_id.eq.${counterpartProfileId},recipient_profile_id.eq.${myProfileId})`
+    )
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  const { count } = await supabase
+    .from('direct_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('lease_id', leaseId)
+    .eq('recipient_profile_id', myProfileId)
+    .eq('sender_profile_id', counterpartProfileId)
+    .is('read_at', null);
+
+  return {
+    leaseId,
+    otherPersonProfileId: counterpartProfileId,
+    otherPersonName: otherProfile?.full_name ?? otherProfile?.email ?? roleLabel,
+    otherPersonRole: roleLabel,
+    propertyName,
+    lastMessage: messages?.[0]?.body ?? null,
+    lastMessageAt: messages?.[0]?.created_at ?? null,
+    unreadCount: count ?? 0,
+  };
+}
+
+// Tenant side: one conversation PER counterpart (Landlord, and Manager if assigned)
+export async function getTenantConversations(
   tenantId: string,
   myProfileId: string
-): Promise<ChatConversation | null> {
+): Promise<ChatConversation[]> {
   const { data: lease } = await supabase
     .from('leases')
     .select('id, unit_id')
@@ -79,7 +136,7 @@ export async function getTenantConversation(
     .limit(1)
     .maybeSingle();
 
-  if (!lease) return null;
+  if (!lease) return [];
 
   const { data: unit } = await supabase
     .from('units')
@@ -92,84 +149,39 @@ export async function getTenantConversation(
     .eq('id', unit!.property_id)
     .single();
 
-  let otherPersonProfileId: string;
-  if (property!.manager_id) {
-    otherPersonProfileId = property!.manager_id;
-  } else {
-    const { data: landlord, error: landlordError } = await supabase
-      .from('landlord_basic_info')
-      .select('profile_id')
-      .eq('id', property!.landlord_id)
-      .single();
+  const conversations: ChatConversation[] = [];
 
-    if (landlordError) throw landlordError;
-
-    if (!landlord?.profile_id) {
-      throw new Error('Landlord profile ID is missing.');
-    }
-    otherPersonProfileId = landlord.profile_id;
-  }
-
-  const { data: otherProfile } = await supabase
-    .from('profiles')
-    .select('full_name, email')
-    .eq('id', otherPersonProfileId)
-    .maybeSingle();
-
-  const { data: messages } = await supabase
-    .from('direct_messages')
-    .select('body, created_at, recipient_profile_id, read_at')
-    .eq('lease_id', lease.id)
-    .order('created_at', { ascending: false })
-    .limit(1);
-
-  const unreadCount = await supabase
-    .from('direct_messages')
-    .select('id', { count: 'exact', head: true })
-    .eq('lease_id', lease.id)
-    .eq('recipient_profile_id', myProfileId)
-    .is('read_at', null);
-
-  return {
-    leaseId: lease.id,
-    otherPersonName: otherProfile?.full_name ?? otherProfile?.email ?? 'Landlord',
-    otherPersonProfileId: otherPersonProfileId,
-    propertyName: property!.property_name,
-    lastMessage: messages?.[0]?.body ?? null,
-    lastMessageAt: messages?.[0]?.created_at ?? null,
-    unreadCount: unreadCount.count ?? 0,
-  };
-}
-
-export async function getLandlordConversations(profileId: string): Promise<ChatConversation[]> {
-  const { data: landlord, error: landlordError } = await supabase
-    .from('landlords')
-    .select('id')
-    .eq('profile_id', profileId)
+  const { data: landlord } = await supabase
+    .from('landlord_basic_info')
+    .select('profile_id')
+    .eq('id', property!.landlord_id)
     .single();
 
-  if (landlordError) throw landlordError;
-
-  if (!landlord?.id) {
-    throw new Error('Landlord not found.');
+  if (landlord?.profile_id) {
+    conversations.push(
+      await buildConversation(
+        lease.id,
+        landlord.profile_id,
+        myProfileId,
+        property!.property_name,
+        'Landlord'
+      )
+    );
   }
 
-  const { data: properties, error: propertiesError } = await supabase
-    .from('properties')
-    .select('id, property_name')
-    .eq('landlord_id', landlord.id);
+  if (property!.manager_id) {
+    conversations.push(
+      await buildConversation(
+        lease.id,
+        property!.manager_id,
+        myProfileId,
+        property!.property_name,
+        'Estate Manager'
+      )
+    );
+  }
 
-  if (propertiesError) throw propertiesError;
-
-  return buildConversationsForProperties(properties ?? [], profileId);
-}
-
-export async function getManagerConversations(profileId: string): Promise<ChatConversation[]> {
-  const { data: properties } = await supabase
-    .from('properties')
-    .select('id, property_name')
-    .eq('manager_id', profileId);
-  return buildConversationsForProperties(properties ?? [], profileId);
+  return conversations;
 }
 
 async function buildConversationsForProperties(
@@ -208,30 +220,37 @@ async function buildConversationsForProperties(
     const tenantProfile = tenantProfileMap.get(lease.tenant_id);
     if (!tenantProfile) continue;
 
-    const { data: messages } = await supabase
-      .from('direct_messages')
-      .select('body, created_at')
-      .eq('lease_id', lease.id)
-      .order('created_at', { ascending: false })
-      .limit(1);
-
-    const { count } = await supabase
-      .from('direct_messages')
-      .select('id', { count: 'exact', head: true })
-      .eq('lease_id', lease.id)
-      .eq('recipient_profile_id', myProfileId)
-      .is('read_at', null);
-
-    results.push({
-      leaseId: lease.id,
-      otherPersonName: tenantProfile.full_name ?? tenantProfile.email,
-      otherPersonProfileId: tenantProfile.id,
-      propertyName: propertyNameMap.get(unitPropertyMap.get(lease.unit_id) ?? '') ?? 'Unknown',
-      lastMessage: messages?.[0]?.body ?? null,
-      lastMessageAt: messages?.[0]?.created_at ?? null,
-      unreadCount: count ?? 0,
-    });
+    const conv = await buildConversation(
+      lease.id,
+      tenantProfile.id,
+      myProfileId,
+      propertyNameMap.get(unitPropertyMap.get(lease.unit_id) ?? '') ?? 'Unknown',
+      'Tenant'
+    );
+    results.push(conv);
   }
 
   return results.sort((a, b) => (b.lastMessageAt ?? '').localeCompare(a.lastMessageAt ?? ''));
+}
+
+export async function getLandlordConversations(profileId: string): Promise<ChatConversation[]> {
+  const { data: landlordRow } = await supabase
+    .from('landlords')
+    .select('id')
+    .eq('profile_id', profileId)
+    .single();
+  if (!landlordRow) return [];
+  const { data: properties } = await supabase
+    .from('properties')
+    .select('id, property_name')
+    .eq('landlord_id', landlordRow.id);
+  return buildConversationsForProperties(properties ?? [], profileId);
+}
+
+export async function getManagerConversations(profileId: string): Promise<ChatConversation[]> {
+  const { data: properties } = await supabase
+    .from('properties')
+    .select('id, property_name')
+    .eq('manager_id', profileId);
+  return buildConversationsForProperties(properties ?? [], profileId);
 }

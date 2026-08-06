@@ -142,6 +142,8 @@ export async function getProperties(
 }
 
 export interface PropertyDetail {
+  landlordName: string;
+  landlordVerified: boolean;
   id: string;
   slug: string;
   propertyName: string;
@@ -173,7 +175,8 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
        latitude, longitude,
        property_images(image_url, is_cover, display_order),
        property_amenities(amenities(id, name, icon)),
-       units(id, unit_number, bedrooms, bathrooms, rent_amount, status)`
+       units(id, unit_number, bedrooms, bathrooms, rent_amount, status),
+       landlords!inner(profiles!inner(full_name, is_verified))`
     )
     .eq('slug', slug)
     .eq('status', 'active')
@@ -206,6 +209,13 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
       rent_amount: number;
       status: string;
     }[];
+
+    landlords: {
+      profiles: {
+        full_name: string | null;
+        is_verified: boolean;
+      };
+    };
   };
 
   return {
@@ -220,6 +230,10 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
     country: raw.country,
     latitude: raw.latitude,
     longitude: raw.longitude,
+
+    landlordName: raw.landlords?.profiles?.full_name ?? 'Property Owner',
+    landlordVerified: raw.landlords?.profiles?.is_verified ?? false,
+
     images: [...raw.property_images]
       .sort((a, b) => a.display_order - b.display_order)
       .map((img) => ({ url: img.image_url, isCover: img.is_cover })),

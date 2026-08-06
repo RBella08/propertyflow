@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  getMessagesForLease,
+  getMessagesForConversation,
   sendMessage,
   markMessagesRead,
-  getTenantConversation,
+  getTenantConversations,
   getLandlordConversations,
   getManagerConversations,
 } from '../services/messagingService';
@@ -12,21 +12,25 @@ import { getTenantId } from '@/features/payments/services/paymentService';
 import { supabase } from '@/lib/supabase';
 import { useAuthContext } from '@/providers/AuthProvider';
 
-export function useLeaseMessages(leaseId: string | undefined) {
+export function useLeaseMessages(
+  leaseId: string | undefined,
+  counterpartProfileId: string | undefined
+) {
   const { profile } = useAuthContext();
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ['lease-messages', leaseId],
-    queryFn: () => getMessagesForLease(leaseId as string),
-    enabled: !!leaseId,
+    queryKey: ['lease-messages', leaseId, counterpartProfileId],
+    queryFn: () =>
+      getMessagesForConversation(leaseId as string, profile!.id, counterpartProfileId as string),
+    enabled: !!leaseId && !!counterpartProfileId && !!profile?.id,
   });
 
   useEffect(() => {
-    if (!leaseId) return;
+    if (!leaseId || !counterpartProfileId) return;
 
     const channel = supabase
-      .channel(`direct-messages:${leaseId}`)
+      .channel(`direct-messages:${leaseId}:${counterpartProfileId}`)
       .on(
         'postgres_changes',
         {
@@ -35,20 +39,23 @@ export function useLeaseMessages(leaseId: string | undefined) {
           table: 'direct_messages',
           filter: `lease_id=eq.${leaseId}`,
         },
-        () => queryClient.invalidateQueries({ queryKey: ['lease-messages', leaseId] })
+        () =>
+          queryClient.invalidateQueries({
+            queryKey: ['lease-messages', leaseId, counterpartProfileId],
+          })
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [leaseId, queryClient]);
+  }, [leaseId, counterpartProfileId, queryClient]);
 
   useEffect(() => {
-    if (leaseId && profile?.id) {
-      markMessagesRead(leaseId, profile.id);
+    if (leaseId && profile?.id && counterpartProfileId) {
+      markMessagesRead(leaseId, profile.id, counterpartProfileId);
     }
-  }, [leaseId, profile?.id]);
+  }, [leaseId, profile?.id, counterpartProfileId]);
 
   return query;
 }
@@ -67,16 +74,18 @@ export function useSendMessage() {
       body: string;
     }) => sendMessage(leaseId, profile!.id, recipientProfileId, body),
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['lease-messages', variables.leaseId] });
+      queryClient.invalidateQueries({
+        queryKey: ['lease-messages', variables.leaseId, variables.recipientProfileId],
+      });
     },
   });
 }
 
-export function useTenantConversation() {
+export function useTenantConversations() {
   const { profile } = useAuthContext();
   return useQuery({
-    queryKey: ['tenant-conversation', profile?.id],
-    queryFn: async () => getTenantConversation(await getTenantId(profile!.id), profile!.id),
+    queryKey: ['tenant-conversations', profile?.id],
+    queryFn: async () => getTenantConversations(await getTenantId(profile!.id), profile!.id),
     enabled: !!profile?.id,
   });
 }
