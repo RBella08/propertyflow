@@ -5,6 +5,8 @@ import { useProperty } from '@/features/properties/hooks/useProperty';
 import { PropertyGallery } from '@/features/properties/components/PropertyGallery';
 import { PropertyAmenities } from '@/features/properties/components/PropertyAmenities';
 import { ContactManagerDialog } from '@/features/properties/components/ContactManagerDialog';
+import { useAuthContext } from '@/providers/AuthProvider';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +26,9 @@ export function PropertyDetailsPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: property, isLoading, isError } = useProperty(slug);
 
+  const { profile } = useAuthContext();
+  const { isAuthenticated } = useAuth();
+
   const [contactOpen, setContactOpen] = useState(false);
 
   if (isLoading) {
@@ -37,6 +42,28 @@ export function PropertyDetailsPage() {
   }
 
   if (isError || !property) {
+    if (!isAuthenticated) {
+      return (
+        <div className="container flex flex-col items-center gap-4 py-24 text-center">
+          <h1 className="text-h4 text-foreground">Log in to view this property</h1>
+
+          <p className="max-w-sm text-muted-foreground">
+            Create a free account or log in to see full property details and book an inspection.
+          </p>
+
+          <div className="flex gap-3">
+            <Button asChild>
+              <Link to="/login">Log In</Link>
+            </Button>
+
+            <Button variant="outline" asChild>
+              <Link to="/register">Create Account</Link>
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     return <NotFoundPage />;
   }
 
@@ -115,13 +142,17 @@ export function PropertyDetailsPage() {
                 {property.propertyType}
               </Badge>
 
-              <Button asChild size="lg">
-                <Link to={`/inspection/${property.id}`}>Book Inspection</Link>
-              </Button>
+              {profile?.id !== property.landlordProfileId && (
+                <>
+                  <Button asChild size="lg">
+                    <Link to={`/inspection/${property.id}`}>Book Inspection</Link>
+                  </Button>
 
-              <Button variant="outline" size="lg" onClick={() => setContactOpen(true)}>
-                Contact Manager
-              </Button>
+                  <Button variant="outline" size="lg" onClick={() => setContactOpen(true)}>
+                    Contact Manager
+                  </Button>
+                </>
+              )}
 
               {property.latitude && property.longitude && (
                 <a

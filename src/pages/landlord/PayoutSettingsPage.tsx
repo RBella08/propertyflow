@@ -96,8 +96,8 @@ export function PayoutSettingsPage() {
               {payoutInfo?.bankName} · {payoutInfo?.bankAccountNumber} · {payoutInfo?.accountName}
             </p>
             <p className="text-caption text-muted-foreground">
-              You keep {100 - (payoutInfo?.commissionPercentage ?? 10)}% of every rent payment.
-              PropertyFlow retains {payoutInfo?.commissionPercentage ?? 10}% as its platform fee.
+              You receive 100% of every rent payment, sent directly to this account automatically.
+              PropertyFlow never holds or takes a cut of your rent.
             </p>
           </CardContent>
         </Card>

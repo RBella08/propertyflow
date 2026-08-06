@@ -4,6 +4,7 @@ export interface ChatMessage {
   id: string;
   senderProfileId: string;
   body: string;
+  imageUrl: string | null;
   createdAt: string;
   readAt: string | null;
 }
@@ -26,7 +27,7 @@ export async function getMessagesForConversation(
 ): Promise<ChatMessage[]> {
   const { data, error } = await supabase
     .from('direct_messages')
-    .select('id, sender_profile_id, body, created_at, read_at')
+    .select('id, sender_profile_id, body, image_url, created_at, read_at')
     .eq('lease_id', leaseId)
     .or(
       `and(sender_profile_id.eq.${myProfileId},recipient_profile_id.eq.${counterpartProfileId}),and(sender_profile_id.eq.${counterpartProfileId},recipient_profile_id.eq.${myProfileId})`
@@ -38,6 +39,7 @@ export async function getMessagesForConversation(
     id: m.id,
     senderProfileId: m.sender_profile_id,
     body: m.body,
+    imageUrl: m.image_url,
     createdAt: m.created_at,
     readAt: m.read_at,
   }));
@@ -47,22 +49,34 @@ export async function sendMessage(
   leaseId: string,
   senderProfileId: string,
   recipientProfileId: string,
-  body: string
+  body: string,
+  imageFile?: File
 ): Promise<void> {
+  let imageUrl: string | null = null;
+  if (imageFile) {
+    const ext = imageFile.name.split('.').pop();
+    const path = `${leaseId}/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from('chat-media')
+      .upload(path, imageFile);
+    if (uploadError) throw uploadError;
+    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+      .from('chat-media')
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
+
+    if (signedUrlError) throw signedUrlError;
+
+    imageUrl = signedUrlData?.signedUrl ?? null;
+  }
+
   const { error } = await supabase.from('direct_messages').insert({
     lease_id: leaseId,
     sender_profile_id: senderProfileId,
     recipient_profile_id: recipientProfileId,
     body,
+    image_url: imageUrl,
   });
   if (error) throw error;
-
-  await supabase.from('notifications').insert({
-    user_id: recipientProfileId,
-    title: 'New message',
-    message: body.length > 100 ? `${body.slice(0, 100)}...` : body,
-    type: 'announcement',
-  });
 }
 
 export async function markMessagesRead(

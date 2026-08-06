@@ -159,6 +159,67 @@ Deno.serve(async (req) => {
       console.error('Failed to create payment notification:', notificationError.message);
     }
 
+    // Notify the landlord/manager too
+    try {
+      const { data: invoiceRow } = await supabase
+        .from('invoices')
+        .select('lease_id')
+        .eq('id', invoiceId)
+        .single();
+      const { data: leaseRow } = await supabase
+        .from('leases')
+        .select('unit_id')
+        .eq('id', invoiceRow!.lease_id)
+        .single();
+      const { data: unitRow } = await supabase
+        .from('units')
+        .select('property_id')
+        .eq('id', leaseRow!.unit_id)
+        .single();
+      const { data: propertyRow } = await supabase
+        .from('properties')
+        .select('landlord_id, manager_id, property_name')
+        .eq('id', unitRow!.property_id)
+        .single();
+
+      let recipientProfileId: string | null = propertyRow!.manager_id;
+      if (!recipientProfileId) {
+        const { data: landlordRow } = await supabase
+          .from('landlords')
+          .select('profile_id')
+          .eq('id', propertyRow!.landlord_id)
+          .single();
+        recipientProfileId = landlordRow?.profile_id ?? null;
+      }
+
+      if (recipientProfileId) {
+        const { data: recipientProfile } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', recipientProfileId)
+          .single();
+
+        await supabase.from('notifications').insert({
+          user_id: recipientProfileId,
+          title: 'Rent payment received',
+          message: `A payment of ₦${amount.toLocaleString()} was received for ${propertyRow!.property_name}.`,
+          type: 'payment_success',
+        });
+
+        if (recipientProfile?.email) {
+          await supabase.functions.invoke('send-email', {
+            body: {
+              to: recipientProfile.email,
+              subject: 'Rent Payment Received — PropertyFlow',
+              html: `<p>A payment of <strong>₦${amount.toLocaleString()}</strong> was received for ${propertyRow!.property_name}.</p>`,
+            },
+          });
+        }
+      }
+    } catch (landlordNotifyError) {
+      console.error('Landlord payment notification failed:', landlordNotifyError);
+    }
+
     // Send email (never fail the payment if email fails)
     try {
       await supabase.functions.invoke('send-email', {

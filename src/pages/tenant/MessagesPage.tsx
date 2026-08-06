@@ -3,12 +3,36 @@ import { MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useAuthContext } from '@/providers/AuthProvider';
 import { ChatThread } from '@/features/messaging/components/ChatThread';
 import { useTenantConversations } from '@/features/messaging/hooks/useMessaging';
 
 export function MessagesPage() {
   const { data: conversations, isLoading } = useTenantConversations();
   const [activeIndex, setActiveIndex] = useState(0);
+
+  const { profile } = useAuthContext();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    const channel = supabase
+      .channel(`tenant-conversations-list:${profile.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'direct_messages' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['tenant-conversations', profile.id] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id, queryClient]);
 
   const active = conversations?.[activeIndex];
 

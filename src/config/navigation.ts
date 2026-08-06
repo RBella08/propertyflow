@@ -57,6 +57,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Maintenance', path: '/landlord/maintenance', icon: Wrench },
     { label: 'Reports', path: '/landlord/reports', icon: BarChart3 },
     { label: 'Calendar', path: '/landlord/calendar', icon: Calendar },
+    { label: 'Plans', path: '/landlord/plans', icon: TrendingUp },
     { label: 'Messages', path: '/landlord/messages', icon: MessageSquare },
     { label: 'Ledger', path: '/landlord/ledger', icon: BookOpen },
     { label: 'Owner Statement', path: '/landlord/owner-statement', icon: FileSignature },

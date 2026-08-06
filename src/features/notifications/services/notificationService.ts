@@ -29,6 +29,11 @@ export async function getNotifications(userId: string): Promise<NotificationItem
   }));
 }
 
+export async function deleteNotification(notificationId: string): Promise<void> {
+  const { error } = await supabase.from('notifications').delete().eq('id', notificationId);
+  if (error) throw error;
+}
+
 export async function markAsRead(notificationId: string): Promise<void> {
   const { error } = await supabase
     .from('notifications')

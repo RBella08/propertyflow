@@ -3,12 +3,36 @@ import { MessageSquare } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { useAuthContext } from '@/providers/AuthProvider';
 import { ChatThread } from '@/features/messaging/components/ChatThread';
 import { useManagerConversations } from '@/features/messaging/hooks/useMessaging';
 
 export function ManagerConversationsPage() {
   const { data: conversations, isLoading } = useManagerConversations();
   const [activeLeaseId, setActiveLeaseId] = useState<string | null>(null);
+
+  const { profile } = useAuthContext();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    const channel = supabase
+      .channel(`manager-conversations-list:${profile.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'direct_messages' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['manager-conversations', profile.id] });
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.id, queryClient]);
 
   const active = conversations?.find((c) => c.leaseId === activeLeaseId);
 

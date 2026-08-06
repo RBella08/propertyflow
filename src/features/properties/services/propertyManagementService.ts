@@ -228,6 +228,25 @@ export async function createProperty(
   imageFiles: File[],
   coverIndex: number
 ): Promise<string> {
+  const { data: landlordRow } = await supabase
+    .from('landlords')
+    .select('plan_id, subscription_plans(property_limit, name)')
+    .eq('id', landlordId)
+    .single();
+
+  const { count: currentCount } = await supabase
+    .from('properties')
+    .select('id', { count: 'exact', head: true })
+    .eq('landlord_id', landlordId);
+
+  const limit = (landlordRow as any)?.subscription_plans?.property_limit ?? 5;
+
+  if ((currentCount ?? 0) >= limit) {
+    throw new Error(
+      `You've reached your plan's limit of ${limit} properties. Upgrade your plan to add more.`
+    );
+  }
+
   const slug = await generateUniqueSlug(input.propertyName);
 
   const { data: property, error: propertyError } = await supabase
@@ -248,6 +267,7 @@ export async function createProperty(
     .single();
 
   if (propertyError) throw propertyError;
+
   const propertyId = property.id;
 
   if (imageFiles.length > 0) {
@@ -263,6 +283,7 @@ export async function createProperty(
     }));
 
     const { error: imagesError } = await supabase.from('property_images').insert(imageRows);
+
     if (imagesError) throw imagesError;
 
     await supabase
@@ -276,7 +297,9 @@ export async function createProperty(
       property_id: propertyId,
       amenity_id: amenityId,
     }));
+
     const { error: amenitiesError } = await supabase.from('property_amenities').insert(amenityRows);
+
     if (amenitiesError) throw amenitiesError;
   }
 

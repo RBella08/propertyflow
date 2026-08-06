@@ -234,6 +234,7 @@ export type Database = {
           body: string;
           created_at: string;
           id: string;
+          image_url: string | null;
           lease_id: string;
           read_at: string | null;
           recipient_profile_id: string;
@@ -243,6 +244,7 @@ export type Database = {
           body: string;
           created_at?: string;
           id?: string;
+          image_url?: string | null;
           lease_id: string;
           read_at?: string | null;
           recipient_profile_id: string;
@@ -252,6 +254,7 @@ export type Database = {
           body?: string;
           created_at?: string;
           id?: string;
+          image_url?: string | null;
           lease_id?: string;
           read_at?: string | null;
           recipient_profile_id?: string;
@@ -485,6 +488,8 @@ export type Database = {
           created_at: string | null;
           id: string;
           notes: string | null;
+          plan_expires_at: string | null;
+          plan_id: string | null;
           profile_id: string;
           subaccount_code: string | null;
           tax_number: string | null;
@@ -502,6 +507,8 @@ export type Database = {
           created_at?: string | null;
           id?: string;
           notes?: string | null;
+          plan_expires_at?: string | null;
+          plan_id?: string | null;
           profile_id: string;
           subaccount_code?: string | null;
           tax_number?: string | null;
@@ -519,6 +526,8 @@ export type Database = {
           created_at?: string | null;
           id?: string;
           notes?: string | null;
+          plan_expires_at?: string | null;
+          plan_id?: string | null;
           profile_id?: string;
           subaccount_code?: string | null;
           tax_number?: string | null;
@@ -526,6 +535,13 @@ export type Database = {
           website?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: 'landlords_plan_id_fkey';
+            columns: ['plan_id'];
+            isOneToOne: false;
+            referencedRelation: 'subscription_plans';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'landlords_profile_id_fkey';
             columns: ['profile_id'];
@@ -1468,6 +1484,33 @@ export type Database = {
             referencedColumns: ['id'];
           },
         ];
+      };
+      subscription_plans: {
+        Row: {
+          duration_months: number;
+          features: string[];
+          id: string;
+          name: string;
+          price: number;
+          property_limit: number;
+        };
+        Insert: {
+          duration_months: number;
+          features?: string[];
+          id?: string;
+          name: string;
+          price: number;
+          property_limit: number;
+        };
+        Update: {
+          duration_months?: number;
+          features?: string[];
+          id?: string;
+          name?: string;
+          price?: number;
+          property_limit?: number;
+        };
+        Relationships: [];
       };
       system_settings: {
         Row: {

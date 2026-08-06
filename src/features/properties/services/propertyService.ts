@@ -142,9 +142,10 @@ export async function getProperties(
 }
 
 export interface PropertyDetail {
+  id: string;
   landlordName: string;
   landlordVerified: boolean;
-  id: string;
+  landlordProfileId: string | null;
   slug: string;
   propertyName: string;
   description: string | null;
@@ -176,7 +177,7 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
        property_images(image_url, is_cover, display_order),
        property_amenities(amenities(id, name, icon)),
        units(id, unit_number, bedrooms, bathrooms, rent_amount, status),
-       landlords!inner(profiles!inner(full_name, is_verified))`
+       landlords!inner(profiles!inner(id, full_name, is_verified))`
     )
     .eq('slug', slug)
     .eq('status', 'active')
@@ -212,6 +213,7 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
 
     landlords: {
       profiles: {
+        id: string;
         full_name: string | null;
         is_verified: boolean;
       };
@@ -233,6 +235,7 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
 
     landlordName: raw.landlords?.profiles?.full_name ?? 'Property Owner',
     landlordVerified: raw.landlords?.profiles?.is_verified ?? false,
+    landlordProfileId: raw.landlords?.profiles?.id ?? null,
 
     images: [...raw.property_images]
       .sort((a, b) => a.display_order - b.display_order)

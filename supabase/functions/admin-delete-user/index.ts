@@ -41,7 +41,13 @@ Deno.serve(async (req) => {
     if (!targetUserId) throw new Error('Missing targetUserId');
 
     const { error: deleteError } = await admin.auth.admin.deleteUser(targetUserId);
-    if (deleteError) throw deleteError;
+
+    if (deleteError) {
+      // Real cause is almost always related records blocking the delete
+      throw new Error(
+        `Could not delete this account — it likely has related properties, leases, or payment records that must be removed first. Consider suspending it instead. (Details: ${deleteError.message})`
+      );
+    }
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

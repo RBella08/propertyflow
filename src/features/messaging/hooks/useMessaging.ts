@@ -63,16 +63,20 @@ export function useLeaseMessages(
 export function useSendMessage() {
   const { profile } = useAuthContext();
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({
       leaseId,
       recipientProfileId,
       body,
+      imageFile,
     }: {
       leaseId: string;
       recipientProfileId: string;
       body: string;
-    }) => sendMessage(leaseId, profile!.id, recipientProfileId, body),
+      imageFile?: File | null;
+    }) => sendMessage(leaseId, profile!.id, recipientProfileId, body, imageFile ?? undefined),
+
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['lease-messages', variables.leaseId, variables.recipientProfileId],

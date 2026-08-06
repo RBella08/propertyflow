@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send } from 'lucide-react';
+import { Send, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,7 +17,10 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
   const { profile } = useAuthContext();
   const { data: messages, isLoading } = useLeaseMessages(leaseId, counterpartProfileId);
   const sendMessage = useSendMessage();
+
   const [body, setBody] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,10 +28,21 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
   }, [messages]);
 
   const handleSend = () => {
-    if (!body.trim()) return;
+    if (!body.trim() && !imageFile) return;
+
     sendMessage.mutate(
-      { leaseId, recipientProfileId: counterpartProfileId, body: body.trim() },
-      { onSuccess: () => setBody('') }
+      {
+        leaseId,
+        recipientProfileId: counterpartProfileId,
+        body: body.trim(),
+        imageFile,
+      },
+      {
+        onSuccess: () => {
+          setBody('');
+          setImageFile(null);
+        },
+      }
     );
   };
 
@@ -40,6 +54,7 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
         {messages && messages.length > 0 ? (
           messages.map((m) => {
             const isMine = m.senderProfileId === profile?.id;
+
             return (
               <div key={m.id} className={cn('flex', isMine ? 'justify-end' : 'justify-start')}>
                 <div
@@ -49,6 +64,15 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
                   )}
                 >
                   <p>{m.body}</p>
+
+                  {m.imageUrl && (
+                    <img
+                      src={m.imageUrl}
+                      alt="Message attachment"
+                      className="mt-1 max-w-full rounded-md"
+                    />
+                  )}
+
                   <p
                     className={cn(
                       'mt-1 text-caption',
@@ -75,13 +99,20 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
           placeholder="Type a message..."
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSend();
-            }
-          }}
         />
+
+        <Button type="button" variant="outline" className="self-end" asChild>
+          <label>
+            <ImageIcon className="h-4 w-4" />
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+        </Button>
+
         <Button onClick={handleSend} loading={sendMessage.isPending} className="self-end">
           <Send className="h-4 w-4" />
         </Button>

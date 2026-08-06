@@ -2,7 +2,12 @@ import { useEffect, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { getNotifications, markAsRead, markAllAsRead } from '../services/notificationService';
+import {
+  getNotifications,
+  markAsRead,
+  markAllAsRead,
+  deleteNotification,
+} from '../services/notificationService';
 import { useAuthContext } from '@/providers/AuthProvider';
 
 export function useNotifications() {
@@ -48,6 +53,15 @@ export function useNotifications() {
   const unreadCount = query.data?.filter((n) => !n.isRead).length ?? 0;
 
   return { ...query, unreadCount };
+}
+
+export function useDeleteNotification() {
+  const { profile } = useAuthContext();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (notificationId: string) => deleteNotification(notificationId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notifications', profile?.id] }),
+  });
 }
 
 export function useMarkAsRead() {
