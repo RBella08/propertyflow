@@ -53,8 +53,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
 
+    let hasInitialized = false;
+
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       if (!isMounted) return;
+      hasInitialized = true;
       setSession(currentSession);
       if (currentSession?.user) {
         fetchProfile(currentSession.user.id);
@@ -64,6 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      // Skip the redundant fire that happens immediately after the
+      // initial getSession() call above resolves with the same session.
+      if (!hasInitialized) return;
       setSession(newSession);
       if (newSession?.user) {
         setIsLoading(true);

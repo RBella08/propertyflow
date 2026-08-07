@@ -50,23 +50,29 @@ export async function sendMessage(
   senderProfileId: string,
   recipientProfileId: string,
   body: string,
-  imageFile?: File
+  imageFiles?: File[]
 ): Promise<void> {
-  let imageUrl: string | null = null;
-  if (imageFile) {
-    const ext = imageFile.name.split('.').pop();
-    const path = `${leaseId}/${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from('chat-media')
-      .upload(path, imageFile);
-    if (uploadError) throw uploadError;
-    const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-      .from('chat-media')
-      .createSignedUrl(path, 60 * 60 * 24 * 7);
+  const imageUrls: string[] = [];
 
-    if (signedUrlError) throw signedUrlError;
+  if (imageFiles && imageFiles.length > 0) {
+    for (const file of imageFiles) {
+      const ext = file.name.split('.').pop();
+      const path = `${leaseId}/${crypto.randomUUID()}.${ext}`;
 
-    imageUrl = signedUrlData?.signedUrl ?? null;
+      const { error: uploadError } = await supabase.storage.from('chat-media').upload(path, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: signed, error: signedUrlError } = await supabase.storage
+        .from('chat-media')
+        .createSignedUrl(path, 60 * 60 * 24 * 7);
+
+      if (signedUrlError) throw signedUrlError;
+
+      if (signed?.signedUrl) {
+        imageUrls.push(signed.signedUrl);
+      }
+    }
   }
 
   const { error } = await supabase.from('direct_messages').insert({
@@ -74,8 +80,9 @@ export async function sendMessage(
     sender_profile_id: senderProfileId,
     recipient_profile_id: recipientProfileId,
     body,
-    image_url: imageUrl,
+    image_url: imageUrls.length > 0 ? imageUrls.join(',') : null,
   });
+
   if (error) throw error;
 }
 

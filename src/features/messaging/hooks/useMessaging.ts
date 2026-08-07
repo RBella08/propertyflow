@@ -69,13 +69,13 @@ export function useSendMessage() {
       leaseId,
       recipientProfileId,
       body,
-      imageFile,
+      imageFiles,
     }: {
       leaseId: string;
       recipientProfileId: string;
       body: string;
-      imageFile?: File | null;
-    }) => sendMessage(leaseId, profile!.id, recipientProfileId, body, imageFile ?? undefined),
+      imageFiles?: File[];
+    }) => sendMessage(leaseId, profile!.id, recipientProfileId, body, imageFiles),
 
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
@@ -87,6 +87,7 @@ export function useSendMessage() {
 
 export function useTenantConversations() {
   const { profile } = useAuthContext();
+
   return useQuery({
     queryKey: ['tenant-conversations', profile?.id],
     queryFn: async () => getTenantConversations(await getTenantId(profile!.id), profile!.id),
@@ -96,6 +97,7 @@ export function useTenantConversations() {
 
 export function useLandlordConversations() {
   const { profile } = useAuthContext();
+
   return useQuery({
     queryKey: ['landlord-conversations', profile?.id],
     queryFn: () => getLandlordConversations(profile!.id),
@@ -105,6 +107,7 @@ export function useLandlordConversations() {
 
 export function useManagerConversations() {
   const { profile } = useAuthContext();
+
   return useQuery({
     queryKey: ['manager-conversations', profile?.id],
     queryFn: () => getManagerConversations(profile!.id),

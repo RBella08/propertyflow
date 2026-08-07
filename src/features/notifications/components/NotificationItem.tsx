@@ -25,19 +25,19 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
     <button
       onClick={onClick}
       className={cn(
-        'flex w-full items-start gap-3 border-b p-4 text-left transition-colors hover:bg-accent',
+        'flex w-full min-w-0 items-start gap-3 p-4 text-left transition-colors hover:bg-accent',
         !notification.isRead && 'bg-primary/5'
       )}
     >
       <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
         <Icon className="h-4 w-4" />
       </div>
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p className="text-small font-medium text-foreground">{notification.title}</p>
-          {!notification.isRead && <span className="h-2 w-2 rounded-full bg-primary" />}
+          <p className="truncate text-small font-medium text-foreground">{notification.title}</p>
+          {!notification.isRead && <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />}
         </div>
-        <p className="text-small text-muted-foreground">{notification.message}</p>
+        <p className="break-words text-small text-muted-foreground">{notification.message}</p>
         <p className="mt-1 text-caption text-muted-foreground">
           {new Date(notification.createdAt).toLocaleString()}
         </p>
