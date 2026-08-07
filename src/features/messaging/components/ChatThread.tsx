@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { useLeaseMessages, useSendMessage } from '../hooks/useMessaging';
+import { useLeaseMessages, useSendMessage, useTypingIndicator } from '../hooks/useMessaging';
+import { VoiceRecorder } from './VoiceRecorder';
 import { useAuthContext } from '@/providers/AuthProvider';
 
 interface ChatThreadProps {
@@ -17,6 +18,7 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
   const { profile } = useAuthContext();
   const { data: messages, isLoading } = useLeaseMessages(leaseId, counterpartProfileId);
   const sendMessage = useSendMessage();
+  const { otherIsTyping, broadcastTyping } = useTypingIndicator(leaseId, profile?.id);
   const [body, setBody] = useState('');
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
@@ -43,6 +45,7 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
 
   const handleSend = () => {
     if (!body.trim() && selectedImages.length === 0) return;
+
     sendMessage.mutate(
       {
         leaseId,
@@ -61,15 +64,25 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
     );
   };
 
-  if (isLoading) return <Skeleton className="h-96" />;
+  const handleSendVoice = (audioBlob: Blob) => {
+    sendMessage.mutate({
+      leaseId,
+      recipientProfileId: counterpartProfileId,
+      body: '',
+      audioBlob,
+    });
+  };
+
+  if (isLoading) return <Skeleton className="h-64 w-full" />;
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex h-[500px] flex-col gap-3 overflow-y-auto rounded-card border p-4">
+      <div className="flex min-h-64 flex-col gap-3 overflow-y-auto">
         {messages && messages.length > 0 ? (
           messages.map((m) => {
             const isMine = m.senderProfileId === profile?.id;
             const images = m.imageUrl ? m.imageUrl.split(',') : [];
+
             return (
               <div key={m.id} className={cn('flex', isMine ? 'justify-end' : 'justify-start')}>
                 <div
@@ -79,13 +92,27 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
                   )}
                 >
                   {images.length > 0 && (
-                    <div className="grid grid-cols-2 gap-1">
+                    <div className="flex flex-wrap gap-2">
                       {images.map((url, i) => (
-                        <img key={i} src={url} alt="" className="rounded-md object-cover" />
+                        <img
+                          key={i}
+                          src={url}
+                          alt="Message attachment"
+                          className="max-w-full rounded-md"
+                        />
                       ))}
                     </div>
                   )}
+
+                  {m.audioUrl && (
+                    <>
+                      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                      <audio controls src={m.audioUrl} />
+                    </>
+                  )}
+
                   {m.body && <p>{m.body}</p>}
+
                   <p
                     className={cn(
                       'text-caption',
@@ -103,6 +130,11 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
             No messages yet — say hello to {otherPersonName}.
           </p>
         )}
+
+        {otherIsTyping && (
+          <p className="text-small text-muted-foreground">{otherPersonName} is typing...</p>
+        )}
+
         <div ref={bottomRef} />
       </div>
 
@@ -134,12 +166,19 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
             onChange={(e) => handleImageSelect(e.target.files)}
           />
         </label>
+
+        <VoiceRecorder onSend={handleSendVoice} />
+
         <Textarea
           rows={2}
           placeholder="Type a message..."
           value={body}
-          onChange={(e) => setBody(e.target.value)}
+          onChange={(e) => {
+            setBody(e.target.value);
+            broadcastTyping();
+          }}
         />
+
         <Button onClick={handleSend} loading={sendMessage.isPending} className="self-end">
           <Send className="h-4 w-4" />
         </Button>

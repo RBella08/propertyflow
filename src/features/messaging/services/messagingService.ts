@@ -5,6 +5,7 @@ export interface ChatMessage {
   senderProfileId: string;
   body: string;
   imageUrl: string | null;
+  audioUrl: string | null;
   createdAt: string;
   readAt: string | null;
 }
@@ -27,7 +28,7 @@ export async function getMessagesForConversation(
 ): Promise<ChatMessage[]> {
   const { data, error } = await supabase
     .from('direct_messages')
-    .select('id, sender_profile_id, body, image_url, created_at, read_at')
+    .select('id, sender_profile_id, body, image_url, audio_url, created_at, read_at')
     .eq('lease_id', leaseId)
     .or(
       `and(sender_profile_id.eq.${myProfileId},recipient_profile_id.eq.${counterpartProfileId}),and(sender_profile_id.eq.${counterpartProfileId},recipient_profile_id.eq.${myProfileId})`
@@ -40,6 +41,7 @@ export async function getMessagesForConversation(
     senderProfileId: m.sender_profile_id,
     body: m.body,
     imageUrl: m.image_url,
+    audioUrl: m.audio_url,
     createdAt: m.created_at,
     readAt: m.read_at,
   }));
@@ -50,7 +52,8 @@ export async function sendMessage(
   senderProfileId: string,
   recipientProfileId: string,
   body: string,
-  imageFiles?: File[]
+  imageFiles?: File[],
+  audioBlob?: Blob
 ): Promise<void> {
   const imageUrls: string[] = [];
 
@@ -63,16 +66,30 @@ export async function sendMessage(
 
       if (uploadError) throw uploadError;
 
-      const { data: signed, error: signedUrlError } = await supabase.storage
+      const { data: signed } = await supabase.storage
         .from('chat-media')
         .createSignedUrl(path, 60 * 60 * 24 * 7);
 
-      if (signedUrlError) throw signedUrlError;
-
-      if (signed?.signedUrl) {
-        imageUrls.push(signed.signedUrl);
-      }
+      if (signed?.signedUrl) imageUrls.push(signed.signedUrl);
     }
+  }
+
+  let audioUrl: string | null = null;
+
+  if (audioBlob) {
+    const path = `${leaseId}/${crypto.randomUUID()}.webm`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('chat-media')
+      .upload(path, audioBlob);
+
+    if (uploadError) throw uploadError;
+
+    const { data: signed } = await supabase.storage
+      .from('chat-media')
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
+
+    audioUrl = signed?.signedUrl ?? null;
   }
 
   const { error } = await supabase.from('direct_messages').insert({
@@ -81,6 +98,7 @@ export async function sendMessage(
     recipient_profile_id: recipientProfileId,
     body,
     image_url: imageUrls.length > 0 ? imageUrls.join(',') : null,
+    audio_url: audioUrl,
   });
 
   if (error) throw error;
@@ -115,7 +133,7 @@ async function buildConversation(
 
   const { data: messages } = await supabase
     .from('direct_messages')
-    .select('body, created_at')
+    .select('body, audio_url, created_at')
     .eq('lease_id', leaseId)
     .or(
       `and(sender_profile_id.eq.${myProfileId},recipient_profile_id.eq.${counterpartProfileId}),and(sender_profile_id.eq.${counterpartProfileId},recipient_profile_id.eq.${myProfileId})`

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getMessagesForConversation,
@@ -63,20 +63,20 @@ export function useLeaseMessages(
 export function useSendMessage() {
   const { profile } = useAuthContext();
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: ({
       leaseId,
       recipientProfileId,
       body,
       imageFiles,
+      audioBlob,
     }: {
       leaseId: string;
       recipientProfileId: string;
       body: string;
       imageFiles?: File[];
-    }) => sendMessage(leaseId, profile!.id, recipientProfileId, body, imageFiles),
-
+      audioBlob?: Blob;
+    }) => sendMessage(leaseId, profile!.id, recipientProfileId, body, imageFiles, audioBlob),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['lease-messages', variables.leaseId, variables.recipientProfileId],
@@ -113,4 +113,37 @@ export function useManagerConversations() {
     queryFn: () => getManagerConversations(profile!.id),
     enabled: !!profile?.id,
   });
+}
+
+export function useTypingIndicator(leaseId: string | undefined, myProfileId: string | undefined) {
+  const [otherIsTyping, setOtherIsTyping] = useState(false);
+
+  useEffect(() => {
+    if (!leaseId) return;
+
+    const channel = supabase.channel(`typing:${leaseId}`);
+    channel
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        if (payload.payload.profileId !== myProfileId) {
+          setOtherIsTyping(true);
+          setTimeout(() => setOtherIsTyping(false), 3000);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [leaseId, myProfileId]);
+
+  const broadcastTyping = () => {
+    if (!leaseId) return;
+    supabase.channel(`typing:${leaseId}`).send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { profileId: myProfileId },
+    });
+  };
+
+  return { otherIsTyping, broadcastTyping };
 }

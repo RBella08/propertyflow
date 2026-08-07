@@ -231,6 +231,7 @@ export type Database = {
       };
       direct_messages: {
         Row: {
+          audio_url: string | null;
           body: string;
           created_at: string;
           id: string;
@@ -241,6 +242,7 @@ export type Database = {
           sender_profile_id: string;
         };
         Insert: {
+          audio_url?: string | null;
           body: string;
           created_at?: string;
           id?: string;
@@ -251,6 +253,7 @@ export type Database = {
           sender_profile_id: string;
         };
         Update: {
+          audio_url?: string | null;
           body?: string;
           created_at?: string;
           id?: string;
@@ -1179,6 +1182,13 @@ export type Database = {
             foreignKeyName: 'properties_landlord_id_fkey';
             columns: ['landlord_id'];
             isOneToOne: false;
+            referencedRelation: 'landlord_public_info';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'properties_landlord_id_fkey';
+            columns: ['landlord_id'];
+            isOneToOne: false;
             referencedRelation: 'landlords';
             referencedColumns: ['id'];
           },
@@ -1831,6 +1841,13 @@ export type Database = {
             foreignKeyName: 'vendors_landlord_id_fkey';
             columns: ['landlord_id'];
             isOneToOne: false;
+            referencedRelation: 'landlord_public_info';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'vendors_landlord_id_fkey';
+            columns: ['landlord_id'];
+            isOneToOne: false;
             referencedRelation: 'landlords';
             referencedColumns: ['id'];
           },
@@ -1944,6 +1961,23 @@ export type Database = {
           subaccount_code?: string | null;
         };
         Relationships: [];
+      };
+      landlord_public_info: {
+        Row: {
+          full_name: string | null;
+          id: string | null;
+          is_verified: boolean | null;
+          profile_id: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'landlords_profile_id_fkey';
+            columns: ['profile_id'];
+            isOneToOne: true;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
       };
       maintenance_overview: {
         Row: {

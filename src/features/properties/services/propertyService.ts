@@ -173,11 +173,10 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
     .from('properties')
     .select(
       `id, slug, property_name, description, property_type, address, city, state, country,
-       latitude, longitude,
+       latitude, longitude, landlord_id,
        property_images(image_url, is_cover, display_order),
        property_amenities(amenities(id, name, icon)),
-       units(id, unit_number, bedrooms, bathrooms, rent_amount, status),
-       landlords!inner(profiles!inner(id, full_name, is_verified))`
+       units(id, unit_number, bedrooms, bathrooms, rent_amount, status)`
     )
     .eq('slug', slug)
     .eq('status', 'active')
@@ -185,9 +184,6 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
 
   if (error) throw error;
 
-  // Nested Supabase selects return deeply-typed shapes that our starter
-  // Database type doesn't fully model yet — this narrows it manually until
-  // the real `supabase gen types` output replaces types/database.ts.
   const raw = data as unknown as {
     id: string;
     slug: string;
@@ -200,6 +196,7 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
     country: string;
     latitude: number | null;
     longitude: number | null;
+    landlord_id: string;
     property_images: { image_url: string; is_cover: boolean; display_order: number }[];
     property_amenities: { amenities: { id: string; name: string; icon: string | null } }[];
     units: {
@@ -210,15 +207,15 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
       rent_amount: number;
       status: string;
     }[];
-
-    landlords: {
-      profiles: {
-        id: string;
-        full_name: string | null;
-        is_verified: boolean;
-      };
-    };
   };
+
+  // Fetched separately, using the safe public view — never blocks the
+  // property itself if the landlord's own row would otherwise be private.
+  const { data: landlordInfo } = await supabase
+    .from('landlord_public_info')
+    .select('profile_id, full_name, is_verified')
+    .eq('id', raw.landlord_id)
+    .maybeSingle();
 
   return {
     id: raw.id,
@@ -232,11 +229,9 @@ export async function getPropertyBySlug(slug: string): Promise<PropertyDetail> {
     country: raw.country,
     latitude: raw.latitude,
     longitude: raw.longitude,
-
-    landlordName: raw.landlords?.profiles?.full_name ?? 'Property Owner',
-    landlordVerified: raw.landlords?.profiles?.is_verified ?? false,
-    landlordProfileId: raw.landlords?.profiles?.id ?? null,
-
+    landlordProfileId: landlordInfo?.profile_id ?? null,
+    landlordName: landlordInfo?.full_name ?? 'Property Owner',
+    landlordVerified: landlordInfo?.is_verified ?? false,
     images: [...raw.property_images]
       .sort((a, b) => a.display_order - b.display_order)
       .map((img) => ({ url: img.image_url, isCover: img.is_cover })),
