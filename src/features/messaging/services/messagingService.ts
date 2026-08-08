@@ -293,3 +293,8 @@ export async function getManagerConversations(profileId: string): Promise<ChatCo
     .eq('manager_id', profileId);
   return buildConversationsForProperties(properties ?? [], profileId);
 }
+
+export async function deleteMessage(messageId: string): Promise<void> {
+  const { error } = await supabase.from('direct_messages').delete().eq('id', messageId);
+  if (error) throw error;
+}

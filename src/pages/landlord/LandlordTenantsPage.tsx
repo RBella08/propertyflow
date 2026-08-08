@@ -11,7 +11,8 @@ import { RecordPaymentDialog } from '@/features/payments/components/RecordPaymen
 import { ReviewDocumentDialog } from '@/features/id-verification/components/ReviewDocumentDialog';
 import { LeaveScreeningReviewDialog } from '@/features/screening/components/LeaveScreeningReviewDialog';
 import { ViewAgreementDialog } from '@/features/agreements/components/ViewAgreementDialog';
-
+import { useMyPlan } from '@/features/plans/hooks/useMyPlan';
+import { hasFeatureAccess } from '@/features/plans/planFeatures';
 const statusVariant: Record<string, 'success' | 'secondary' | 'warning' | 'destructive'> = {
   active: 'success',
   renewed: 'success',
@@ -24,6 +25,7 @@ const STATUS_FILTERS = ['all', 'active', 'renewed', 'terminated', 'expired'] as 
 
 export function LandlordTenantsPage() {
   const { data: tenants, isLoading } = useLandlordTenants();
+  const { data: myPlan } = useMyPlan();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_FILTERS)[number]>('all');
 
@@ -143,13 +145,17 @@ export function LandlordTenantsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() =>
+                      onClick={() => {
+                        if (myPlan && !hasFeatureAccess(myPlan, 'tenantScreening')) {
+                          return;
+                        }
+
                         setReviewTarget({
                           leaseId: t.leaseId,
                           tenantProfileId: t.tenantProfileId,
                           name: t.fullName,
-                        })
-                      }
+                        });
+                      }}
                     >
                       Leave Review
                     </Button>

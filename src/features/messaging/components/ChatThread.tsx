@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send, Image as ImageIcon, X } from 'lucide-react';
+import { Send, Image as ImageIcon, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { useLeaseMessages, useSendMessage, useTypingIndicator } from '../hooks/useMessaging';
+import {
+  useLeaseMessages,
+  useSendMessage,
+  useTypingIndicator,
+  useDeleteMessage,
+} from '../hooks/useMessaging';
 import { VoiceRecorder } from './VoiceRecorder';
 import { useAuthContext } from '@/providers/AuthProvider';
 
@@ -18,6 +23,7 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
   const { profile } = useAuthContext();
   const { data: messages, isLoading } = useLeaseMessages(leaseId, counterpartProfileId);
   const sendMessage = useSendMessage();
+  const deleteMessage = useDeleteMessage();
   const { otherIsTyping, broadcastTyping } = useTypingIndicator(leaseId, profile?.id);
   const [body, setBody] = useState('');
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
@@ -76,8 +82,8 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
   if (isLoading) return <Skeleton className="h-64 w-full" />;
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex min-h-64 flex-col gap-3 overflow-y-auto">
+    <div className="space-y-3">
+      <div className="flex h-[55vh] max-h-[500px] min-h-[300px] flex-col gap-3 overflow-y-auto rounded-card border-2 p-4">
         {messages && messages.length > 0 ? (
           messages.map((m) => {
             const isMine = m.senderProfileId === profile?.id;
@@ -113,14 +119,24 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
 
                   {m.body && <p>{m.body}</p>}
 
-                  <p
-                    className={cn(
-                      'text-caption',
-                      isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                  <div className="flex items-center justify-between gap-2">
+                    <p
+                      className={cn(
+                        'text-caption',
+                        isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                      )}
+                    >
+                      {new Date(m.createdAt).toLocaleString()}
+                    </p>
+                    {isMine && (
+                      <button
+                        onClick={() => deleteMessage.mutate(m.id)}
+                        className="text-primary-foreground/70 hover:text-primary-foreground"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
                     )}
-                  >
-                    {new Date(m.createdAt).toLocaleString()}
-                  </p>
+                  </div>
                 </div>
               </div>
             );

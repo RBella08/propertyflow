@@ -7,6 +7,7 @@ import {
   getTenantConversations,
   getLandlordConversations,
   getManagerConversations,
+  deleteMessage,
 } from '../services/messagingService';
 import { getTenantId } from '@/features/payments/services/paymentService';
 import { supabase } from '@/lib/supabase';
@@ -146,4 +147,14 @@ export function useTypingIndicator(leaseId: string | undefined, myProfileId: str
   };
 
   return { otherIsTyping, broadcastTyping };
+}
+
+export function useDeleteMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (messageId: string) => deleteMessage(messageId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lease-messages'] });
+    },
+  });
 }

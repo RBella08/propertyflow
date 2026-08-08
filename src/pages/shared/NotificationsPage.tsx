@@ -18,7 +18,7 @@ export function NotificationsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-h4 text-foreground">Notifications</h1>
           <p className="text-muted-foreground">
@@ -46,7 +46,7 @@ export function NotificationsPage() {
           ) : notifications && notifications.length > 0 ? (
             <div className="flex max-h-[600px] flex-col overflow-y-auto">
               {notifications.map((n) => (
-                <div key={n.id} className="flex flex-col border-b last:border-b-0">
+                <div key={n.id} className="flex min-w-0 flex-col border-b last:border-b-0">
                   <NotificationItem
                     notification={n}
                     onClick={() => !n.isRead && markAsRead.mutate(n.id)}

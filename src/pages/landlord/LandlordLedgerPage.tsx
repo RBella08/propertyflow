@@ -4,6 +4,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMyPlan } from '@/features/plans/hooks/useMyPlan';
+import { hasFeatureAccess, FEATURE_MIN_PLAN } from '@/features/plans/planFeatures';
+import { UpgradeRequiredCard } from '@/features/plans/components/UpgradeRequiredCard';
 import { DateRangeFilter } from '@/features/reports/components/DateRangeFilter';
 import { ExportMenu } from '@/features/reports/components/ExportMenu';
 import {
@@ -36,15 +39,25 @@ export function LandlordLedgerPage() {
   const [visibleCount, setVisibleCount] = useState(15);
   const { data: entries, isLoading } = useLandlordLedger(startDate, endDate);
   const { data: properties } = useLandlordPropertyOptionsForAccounting();
+  const { data: myPlan } = useMyPlan();
+
+  if (myPlan && !hasFeatureAccess(myPlan, 'ledger')) {
+    return (
+      <UpgradeRequiredCard
+        featureName="Accounting Ledger"
+        requiredPlanName={FEATURE_MIN_PLAN.ledger}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-h4 text-foreground">Accounting Ledger</h1>
           <p className="text-muted-foreground">Every dollar in and out, with a running balance.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => setExpenseDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Record Expense
           </Button>

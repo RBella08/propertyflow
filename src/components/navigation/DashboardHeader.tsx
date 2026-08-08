@@ -18,34 +18,36 @@ export function DashboardHeader() {
   const crumbs = useBreadcrumbs();
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
-      <div className="flex items-center gap-3">
+    <header className="flex h-16 items-center justify-between gap-2 border-b bg-background px-3 md:px-6">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <MobileSidebar />
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/">Home</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            {crumbs.map((crumb, index) => (
-              <Fragment key={crumb.path}>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  {index === crumbs.length - 1 ? (
-                    <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                  ) : (
-                    <BreadcrumbLink asChild>
-                      <Link to={crumb.path}>{crumb.label}</Link>
-                    </BreadcrumbLink>
-                  )}
-                </BreadcrumbItem>
-              </Fragment>
-            ))}
-          </BreadcrumbList>
-        </Breadcrumb>
+        <div className="min-w-0 overflow-x-auto">
+          <Breadcrumb>
+            <BreadcrumbList className="flex-nowrap whitespace-nowrap">
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">Home</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              {crumbs.map((crumb, index) => (
+                <Fragment key={crumb.path}>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    {index === crumbs.length - 1 ? (
+                      <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink asChild>
+                        <Link to={crumb.path}>{crumb.label}</Link>
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                </Fragment>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         <ThemeToggle />
         <NotificationBell />
         <UserMenu />

@@ -67,6 +67,10 @@ const CONTENT: Record<RoleId, { title: string; steps: { heading: string; body: s
         heading: '6. Managing your Profile',
         body: 'Update your contact details, upload a profile photo, or change your password from Profile and Settings in the sidebar.',
       },
+      {
+        heading: '7. Messaging & Announcements',
+        body: 'Message your landlord or estate manager directly under Messages — separate conversations for each. Check Announcements for property-wide updates.',
+      },
     ],
   },
   landlord: {
@@ -103,6 +107,30 @@ const CONTENT: Record<RoleId, { title: string; steps: { heading: string; body: s
       {
         heading: '8. Assigning an Estate Manager',
         body: "To have someone manage a property on your behalf: they first register normally as a Tenant (the only public option besides Landlord). Then, contact PropertyFlow support/admin and ask them to change that account's role to \"Manager.\" Once that's done, go to your Properties list and click the manager icon on any property to look them up by email and assign them. A Manager can then handle that property's units, leases, tenants, maintenance, and reports on your behalf — but only for properties you've specifically assigned to them.",
+      },
+      {
+        heading: '9.  Messaging Your Tenants',
+        body: "Go to Messages for real conversations with each tenant — send text, photos, or voice notes, and see when they're typing.",
+      },
+      {
+        heading: '10. Recording Cash Payments',
+        body: 'If a tenant pays you outside the app, use Record Payment on the Tenants page — it saves as Pending until you confirm it, then automatically updates their balance and sends them a receipt.',
+      },
+      {
+        heading: '11. Tenancy Agreements & ID Verification',
+        body: 'Every new lease automatically generates a Tenancy Agreement for the tenant to sign, including guarantor details and a digital signature. Review submitted ID documents from the Tenants page before approving.',
+      },
+      {
+        heading: '12. Serving Notices & Screening Tenants',
+        body: 'Use Serve Notice to Quit if you need to formally end a tenancy early. After a lease ends, leave a screening review — this builds a shared rental history other landlords can check before leasing to the same tenant.',
+      },
+      {
+        heading: '13. Accounting, Owner Statements & ROI',
+        body: "Ledger shows every dollar in and out. Owner Statement summarizes one property's income and expenses for any period. ROI Tracking shows your real annual return once you enter what you paid for a property.",
+      },
+      {
+        heading: '14. Plans & Billing',
+        body: 'Every plan includes 100% direct payouts — PropertyFlow never takes a cut of your rent. Upgrading your Plan raises how many properties you can list and unlocks features like the Ledger and Tenant Screening.',
       },
     ],
   },

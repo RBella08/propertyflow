@@ -40,11 +40,11 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Calendar', path: '/tenant/calendar', icon: Calendar },
     { label: 'Messages', path: '/tenant/messages', icon: MessageSquare },
     { label: 'ID Verification', path: '/tenant/id-verification', icon: FileCheck },
+    { label: 'Tenancy Agreement', path: '/tenant/agreement', icon: FileSignature },
     { label: 'Notifications', path: '/notifications', icon: Bell },
     { label: 'Announcements', path: '/tenant/announcements', icon: Megaphone },
     { label: 'Profile', path: '/profile', icon: User },
     { label: 'Settings', path: '/settings', icon: Settings },
-    { label: 'Tenancy Agreement', path: '/tenant/agreement', icon: FileSignature },
   ],
   landlord: [
     { label: 'Dashboard', path: '/landlord/dashboard', icon: LayoutDashboard },
@@ -81,6 +81,7 @@ export const sidebarNav: Record<UserRole, NavItem[]> = {
     { label: 'Messages', path: '/manager/messages', icon: MessageSquare },
     { label: 'Notifications', path: '/notifications', icon: Bell },
     { label: 'Profile', path: '/profile', icon: User },
+    { label: 'Settings', path: '/settings', icon: Settings },
   ],
   admin: [
     { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },

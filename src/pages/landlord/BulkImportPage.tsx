@@ -11,6 +11,9 @@ import {
   type ImportRowResult,
 } from '@/features/bulk-import/services/bulkImportService';
 import { useBulkImport } from '@/features/bulk-import/hooks/useBulkImport';
+import { useMyPlan } from '@/features/plans/hooks/useMyPlan';
+import { hasFeatureAccess, FEATURE_MIN_PLAN } from '@/features/plans/planFeatures';
+import { UpgradeRequiredCard } from '@/features/plans/components/UpgradeRequiredCard';
 
 export function BulkImportPage() {
   const [parsedRows, setParsedRows] = useState<ParsedRow[]>([]);
@@ -18,6 +21,7 @@ export function BulkImportPage() {
   const [parseError, setParseError] = useState<string | null>(null);
   const [results, setResults] = useState<ImportRowResult[] | null>(null);
   const bulkImport = useBulkImport();
+  const { data: myPlan } = useMyPlan();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -49,6 +53,15 @@ export function BulkImportPage() {
       });
     }
   };
+
+  if (myPlan && !hasFeatureAccess(myPlan, 'bulkImport')) {
+    return (
+      <UpgradeRequiredCard
+        featureName="Bulk Import"
+        requiredPlanName={FEATURE_MIN_PLAN.bulkImport}
+      />
+    );
+  }
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">

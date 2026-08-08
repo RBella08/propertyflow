@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useMyPlan } from '@/features/plans/hooks/useMyPlan';
+import { hasFeatureAccess, FEATURE_MIN_PLAN } from '@/features/plans/planFeatures';
+import { UpgradeRequiredCard } from '@/features/plans/components/UpgradeRequiredCard';
 import { DateRangeFilter } from '@/features/reports/components/DateRangeFilter';
 import { ExportMenu } from '@/features/reports/components/ExportMenu';
 import {
@@ -31,6 +34,16 @@ export function OwnerStatementPage() {
   const [startDate, setStartDate] = useState(getDefaultStartDate());
   const [endDate, setEndDate] = useState(getTodayDate());
   const { data: statement, isLoading } = useOwnerStatement(propertyId, startDate, endDate);
+  const { data: myPlan } = useMyPlan();
+
+  if (myPlan && !hasFeatureAccess(myPlan, 'ownerStatement')) {
+    return (
+      <UpgradeRequiredCard
+        featureName="Owner Statement"
+        requiredPlanName={FEATURE_MIN_PLAN.ownerStatement}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

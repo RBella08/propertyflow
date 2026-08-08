@@ -6,6 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useMyPlan } from '@/features/plans/hooks/useMyPlan';
+import { hasFeatureAccess, FEATURE_MIN_PLAN } from '@/features/plans/planFeatures';
+import { UpgradeRequiredCard } from '@/features/plans/components/UpgradeRequiredCard';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useROIData, useUpdatePropertyInvestment } from '@/features/accounting/hooks/useAccounting';
@@ -23,6 +26,7 @@ function formatNaira(amount: number) {
 export function ROITrackingPage() {
   const { data: roiData, isLoading } = useROIData();
   const updateInvestment = useUpdatePropertyInvestment();
+  const { data: myPlan } = useMyPlan();
   const [search, setSearch] = useState('');
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [editTarget, setEditTarget] = useState<{ id: string; name: string } | null>(null);
@@ -54,6 +58,15 @@ export function ROITrackingPage() {
       toast.error('Could not save investment details');
     }
   };
+
+  if (myPlan && !hasFeatureAccess(myPlan, 'roiTracking')) {
+    return (
+      <UpgradeRequiredCard
+        featureName="ROI Tracking"
+        requiredPlanName={FEATURE_MIN_PLAN.roiTracking}
+      />
+    );
+  }
 
   if (isLoading) return <Skeleton className="h-96" />;
 
