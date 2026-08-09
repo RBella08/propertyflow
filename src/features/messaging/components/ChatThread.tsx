@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Send, Image as ImageIcon, X, Trash2, Pencil, Check } from 'lucide-react';
+import { Send, Image as ImageIcon, X, Trash2, Pencil, Check, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,9 @@ import {
   useEditMessage,
 } from '../hooks/useMessaging';
 import { VoiceRecorder } from './VoiceRecorder';
+import { VideoPicker } from './VideoPicker';
+import { useMyPlan } from '@/features/plans/hooks/useMyPlan';
+import { hasFeatureAccess, FEATURE_MIN_TIER } from '@/features/plans/planFeatures';
 import { useAuthContext } from '@/providers/AuthProvider';
 
 const EDIT_WINDOW_MS = 20 * 60 * 1000;
@@ -43,6 +47,9 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
   const [body, setBody] = useState('');
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const { data: myTier } = useMyPlan();
+  const canSendVideo = hasFeatureAccess(myTier ?? 'Free', 'chatVideo');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; isMine: boolean } | null>(null);
   const [editTarget, setEditTarget] = useState<{ id: string; body: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -67,13 +74,14 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
   };
 
   const handleSend = () => {
-    if (!body.trim() && selectedImages.length === 0) return;
+    if (!body.trim() && selectedImages.length === 0 && !videoFile) return;
     sendMessage.mutate(
       {
         leaseId,
         recipientProfileId: counterpartProfileId,
         body: body.trim(),
         imageFiles: selectedImages,
+        videoFile: videoFile ?? undefined,
       },
       {
         onSuccess: () => {
@@ -81,6 +89,7 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
           previewUrls.forEach((url) => URL.revokeObjectURL(url));
           setSelectedImages([]);
           setPreviewUrls([]);
+          setVideoFile(null);
         },
       }
     );
@@ -156,6 +165,16 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
                           {' '}
                           <track kind="captions" />{' '}
                         </audio>
+                      )}
+                      {m.videoUrl && (
+                        <video
+                          src={m.videoUrl}
+                          controls
+                          className="max-w-full rounded-md"
+                          style={{ maxHeight: '240px' }}
+                        >
+                          <track kind="captions" />
+                        </video>
                       )}
                       {m.body && <p className="break-words">{m.body}</p>}
                     </>
@@ -243,6 +262,22 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
           />
         </label>
         <VoiceRecorder onSend={handleSendVoice} />
+        {canSendVideo ? (
+          <VideoPicker onSelect={setVideoFile} />
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="shrink-0 self-end opacity-50"
+            title={`Video messages require the ${FEATURE_MIN_TIER.chatVideo} plan or higher`}
+            onClick={() =>
+              toast.info(`Upgrade to ${FEATURE_MIN_TIER.chatVideo} to send video messages`)
+            }
+          >
+            <Lock className="h-4 w-4" />
+          </Button>
+        )}
         <Textarea
           rows={2}
           placeholder="Type a message..."

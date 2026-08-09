@@ -38,8 +38,7 @@ export function PayRentPage() {
       await openPaystackCheckout({
         email: profile.email,
         amountNaira: balance,
-        invoiceId,
-        tenantId,
+        metadata: { invoice_id: invoiceId, tenant_id: tenantId },
         subaccountCode,
         onSuccess: async (reference) => {
           setVerifying(true);

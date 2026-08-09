@@ -100,13 +100,16 @@ export function useSendMessage() {
       body,
       imageFiles,
       audioBlob,
+      videoFile,
     }: {
       leaseId: string;
       recipientProfileId: string;
       body: string;
       imageFiles?: File[];
       audioBlob?: Blob;
-    }) => sendMessage(leaseId, profile!.id, recipientProfileId, body, imageFiles, audioBlob),
+      videoFile?: File;
+    }) =>
+      sendMessage(leaseId, profile!.id, recipientProfileId, body, imageFiles, audioBlob, videoFile),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['lease-messages', variables.leaseId, variables.recipientProfileId],

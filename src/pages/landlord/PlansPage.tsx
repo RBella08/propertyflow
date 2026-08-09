@@ -10,6 +10,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { openPaystackCheckout } from '@/lib/paystack';
 
+const DURATION_FILTERS = ['all', 1, 2, 3, 6, 12] as const;
+
 function formatNaira(amount: number) {
   return new Intl.NumberFormat('en-NG', {
     style: 'currency',
@@ -21,6 +23,7 @@ function formatNaira(amount: number) {
 export function PlansPage() {
   const { profile } = useAuthContext();
   const [subscribing, setSubscribing] = useState<string | null>(null);
+  const [durationFilter, setDurationFilter] = useState<(typeof DURATION_FILTERS)[number]>('all');
 
   const { data: plans, isLoading } = useQuery({
     queryKey: ['subscription-plans'],
@@ -31,8 +34,8 @@ export function PlansPage() {
     },
   });
 
-  const { data: myPlanId } = useQuery({
-    queryKey: ['my-plan', profile?.id],
+  const { data: myPlanId, refetch: refetchMyPlan } = useQuery({
+    queryKey: ['my-plan-id', profile?.id],
     queryFn: async () => {
       const { data } = await supabase
         .from('landlords')
@@ -44,33 +47,32 @@ export function PlansPage() {
     enabled: !!profile?.id,
   });
 
+  const filteredPlans = plans?.filter((p) => {
+    if (p.price === 0) return true; // Free always shown
+    return durationFilter === 'all' || p.duration_months === durationFilter;
+  });
+
   const handleSubscribe = async (planId: string, price: number, name: string) => {
     if (price === 0) return;
     setSubscribing(planId);
     try {
-      // Subscription payments go straight to PropertyFlow's own account —
-      // no subaccount here, since this is platform revenue, not rent.
       await openPaystackCheckout({
         email: profile!.email,
         amountNaira: price,
-        invoiceId: `plan-${planId}`,
-        tenantId: profile!.id,
         subaccountCode: null,
-        metadata: {
-          invoice_id: `plan-${planId}`,
-          tenant_id: profile!.id,
-          landlord_profile_id: profile!.id,
-          plan_id: planId,
-        },
+        metadata: { landlord_profile_id: profile!.id, plan_id: planId },
         onSuccess: async (reference) => {
           const { data, error } = await supabase.functions.invoke('verify-plan-payment', {
             body: { reference },
           });
-          if (error || !data.success) {
-            toast.error('Could not verify payment', { description: data?.message });
+          if (error || !data?.success) {
+            toast.error('Could not verify payment', {
+              description: data?.message ?? 'Please contact support.',
+            });
             setSubscribing(null);
             return;
           }
+          await refetchMyPlan();
           toast.success(`Upgraded to ${name}!`);
           setSubscribing(null);
         },
@@ -93,8 +95,21 @@ export function PlansPage() {
         </p>
       </div>
 
+      <div className="flex flex-wrap gap-2">
+        {DURATION_FILTERS.map((d) => (
+          <Button
+            key={d}
+            size="sm"
+            variant={durationFilter === d ? 'default' : 'outline'}
+            onClick={() => setDurationFilter(d)}
+          >
+            {d === 'all' ? 'All' : `${d} Month${d > 1 ? 's' : ''}`}
+          </Button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {plans?.map((plan) => (
+        {filteredPlans?.map((plan) => (
           <Card key={plan.id} className={myPlanId === plan.id ? 'border-primary' : ''}>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -115,7 +130,7 @@ export function PlansPage() {
               <ul className="flex flex-col gap-2 text-small text-muted-foreground">
                 {plan.features.map((f: string) => (
                   <li key={f} className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-success" /> {f}
+                    <CheckCircle className="h-4 w-4 shrink-0 text-success" /> {f}
                   </li>
                 ))}
               </ul>

@@ -6,6 +6,7 @@ export interface ChatMessage {
   body: string;
   imageUrl: string | null;
   audioUrl: string | null;
+  videoUrl: string | null;
   createdAt: string;
   editedAt: string | null;
   readAt: string | null;
@@ -31,7 +32,7 @@ export async function getMessagesForConversation(
   const { data, error } = await supabase
     .from('direct_messages')
     .select(
-      'id, sender_profile_id, body, image_url, audio_url, created_at, edited_at, read_at, deleted_for_sender, deleted_for_recipient, deleted_for_everyone'
+      'id, sender_profile_id, body, image_url, audio_url, video_url, created_at, edited_at, read_at, deleted_for_sender, deleted_for_recipient, deleted_for_everyone'
     )
     .eq('lease_id', leaseId)
     .or(
@@ -51,6 +52,7 @@ export async function getMessagesForConversation(
       body: m.deleted_for_everyone ? '' : m.body,
       imageUrl: m.deleted_for_everyone ? null : m.image_url,
       audioUrl: m.deleted_for_everyone ? null : m.audio_url,
+      videoUrl: m.deleted_for_everyone ? null : m.video_url,
       createdAt: m.created_at,
       editedAt: m.edited_at,
       readAt: m.read_at,
@@ -88,7 +90,8 @@ export async function sendMessage(
   recipientProfileId: string,
   body: string,
   imageFiles?: File[],
-  audioBlob?: Blob
+  audioBlob?: Blob,
+  videoFile?: File
 ): Promise<void> {
   const imageUrls: string[] = [];
 
@@ -96,35 +99,40 @@ export async function sendMessage(
     for (const file of imageFiles) {
       const ext = file.name.split('.').pop();
       const path = `${leaseId}/${crypto.randomUUID()}.${ext}`;
-
       const { error: uploadError } = await supabase.storage.from('chat-media').upload(path, file);
-
       if (uploadError) throw uploadError;
-
-      const { data: signed } = await supabase.storage
+      const { data } = await supabase.storage
         .from('chat-media')
         .createSignedUrl(path, 60 * 60 * 24 * 7);
-
-      if (signed?.signedUrl) imageUrls.push(signed.signedUrl);
+      if (data?.signedUrl) imageUrls.push(data.signedUrl);
     }
   }
 
   let audioUrl: string | null = null;
-
   if (audioBlob) {
     const path = `${leaseId}/${crypto.randomUUID()}.webm`;
-
     const { error: uploadError } = await supabase.storage
       .from('chat-media')
       .upload(path, audioBlob);
-
     if (uploadError) throw uploadError;
-
-    const { data: signed } = await supabase.storage
+    const { data } = await supabase.storage
       .from('chat-media')
       .createSignedUrl(path, 60 * 60 * 24 * 7);
+    audioUrl = data?.signedUrl ?? null;
+  }
 
-    audioUrl = signed?.signedUrl ?? null;
+  let videoUrl: string | null = null;
+  if (videoFile) {
+    const ext = videoFile.name.split('.').pop();
+    const path = `${leaseId}/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from('chat-media')
+      .upload(path, videoFile);
+    if (uploadError) throw uploadError;
+    const { data } = await supabase.storage
+      .from('chat-media')
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
+    videoUrl = data?.signedUrl ?? null;
   }
 
   const { error } = await supabase.from('direct_messages').insert({
@@ -134,8 +142,8 @@ export async function sendMessage(
     body,
     image_url: imageUrls.length > 0 ? imageUrls.join(',') : null,
     audio_url: audioUrl,
+    video_url: videoUrl,
   });
-
   if (error) throw error;
 }
 
@@ -169,7 +177,7 @@ async function buildConversation(
   const { data: messages } = await supabase
     .from('direct_messages')
     .select(
-      'body, audio_url, created_at, deleted_for_sender, deleted_for_recipient, deleted_for_everyone'
+      'body, audio_url, video_url, created_at, deleted_for_sender, deleted_for_recipient, deleted_for_everyone'
     )
     .eq('lease_id', leaseId)
     .or(

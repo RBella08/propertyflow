@@ -41,10 +41,8 @@ export function generatePaymentReference() {
 export async function openPaystackCheckout(config: {
   email: string;
   amountNaira: number;
-  invoiceId: string;
-  tenantId: string;
   subaccountCode?: string | null;
-  metadata?: Record<string, string>;
+  metadata: Record<string, unknown>;
   onSuccess: (reference: string) => void;
   onClose: () => void;
 }) {
@@ -59,7 +57,7 @@ export async function openPaystackCheckout(config: {
     ref: reference,
     subaccount: config.subaccountCode ?? undefined,
     bearer: config.subaccountCode ? 'subaccount' : undefined,
-    metadata: { invoice_id: config.invoiceId, tenant_id: config.tenantId },
+    metadata: config.metadata,
     callback: (response) => config.onSuccess(response.reference),
     onClose: config.onClose,
   });

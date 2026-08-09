@@ -18,10 +18,10 @@ export function DashboardHeader() {
   const crumbs = useBreadcrumbs();
 
   return (
-    <header className="flex h-16 items-center justify-between gap-2 border-b bg-background px-3 md:px-6">
-      <div className="flex min-w-0 flex-1 items-center gap-2">
+    <header className="flex h-16 items-center gap-2 border-b bg-background px-3 md:px-6">
+      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
         <MobileSidebar />
-        <div className="min-w-0 overflow-x-auto">
+        <div className="min-w-0 flex-1 overflow-x-auto">
           <Breadcrumb>
             <BreadcrumbList className="flex-nowrap whitespace-nowrap">
               <BreadcrumbItem>
@@ -47,7 +47,7 @@ export function DashboardHeader() {
           </Breadcrumb>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+      <div className="flex shrink-0 items-center gap-1">
         <ThemeToggle />
         <NotificationBell />
         <UserMenu />

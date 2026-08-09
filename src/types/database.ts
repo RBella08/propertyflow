@@ -244,6 +244,7 @@ export type Database = {
           read_at: string | null;
           recipient_profile_id: string;
           sender_profile_id: string;
+          video_url: string | null;
         };
         Insert: {
           audio_url?: string | null;
@@ -259,6 +260,7 @@ export type Database = {
           read_at?: string | null;
           recipient_profile_id: string;
           sender_profile_id: string;
+          video_url?: string | null;
         };
         Update: {
           audio_url?: string | null;
@@ -274,6 +276,7 @@ export type Database = {
           read_at?: string | null;
           recipient_profile_id?: string;
           sender_profile_id?: string;
+          video_url?: string | null;
         };
         Relationships: [
           {
@@ -1560,6 +1563,7 @@ export type Database = {
           name: string;
           price: number;
           property_limit: number;
+          tier_name: string | null;
         };
         Insert: {
           duration_months: number;
@@ -1568,6 +1572,7 @@ export type Database = {
           name: string;
           price: number;
           property_limit: number;
+          tier_name?: string | null;
         };
         Update: {
           duration_months?: number;
@@ -1576,6 +1581,7 @@ export type Database = {
           name?: string;
           price?: number;
           property_limit?: number;
+          tier_name?: string | null;
         };
         Relationships: [];
       };
