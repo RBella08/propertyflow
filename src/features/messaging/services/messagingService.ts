@@ -7,7 +7,9 @@ export interface ChatMessage {
   imageUrl: string | null;
   audioUrl: string | null;
   createdAt: string;
+  editedAt: string | null;
   readAt: string | null;
+  deletedForEveryone: boolean;
 }
 
 export interface ChatConversation {
@@ -28,7 +30,9 @@ export async function getMessagesForConversation(
 ): Promise<ChatMessage[]> {
   const { data, error } = await supabase
     .from('direct_messages')
-    .select('id, sender_profile_id, body, image_url, audio_url, created_at, read_at')
+    .select(
+      'id, sender_profile_id, body, image_url, audio_url, created_at, edited_at, read_at, deleted_for_sender, deleted_for_recipient, deleted_for_everyone'
+    )
     .eq('lease_id', leaseId)
     .or(
       `and(sender_profile_id.eq.${myProfileId},recipient_profile_id.eq.${counterpartProfileId}),and(sender_profile_id.eq.${counterpartProfileId},recipient_profile_id.eq.${myProfileId})`
@@ -36,15 +40,46 @@ export async function getMessagesForConversation(
     .order('created_at', { ascending: true });
   if (error) throw error;
 
-  return (data ?? []).map((m) => ({
-    id: m.id,
-    senderProfileId: m.sender_profile_id,
-    body: m.body,
-    imageUrl: m.image_url,
-    audioUrl: m.audio_url,
-    createdAt: m.created_at,
-    readAt: m.read_at,
-  }));
+  return (data ?? [])
+    .filter((m) => {
+      const iAmSender = m.sender_profile_id === myProfileId;
+      return iAmSender ? !m.deleted_for_sender : !m.deleted_for_recipient;
+    })
+    .map((m) => ({
+      id: m.id,
+      senderProfileId: m.sender_profile_id,
+      body: m.deleted_for_everyone ? '' : m.body,
+      imageUrl: m.deleted_for_everyone ? null : m.image_url,
+      audioUrl: m.deleted_for_everyone ? null : m.audio_url,
+      createdAt: m.created_at,
+      editedAt: m.edited_at,
+      readAt: m.read_at,
+      deletedForEveryone: m.deleted_for_everyone,
+    }));
+}
+
+export async function deleteMessageForMe(messageId: string, iAmSender: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('direct_messages')
+    .update(iAmSender ? { deleted_for_sender: true } : { deleted_for_recipient: true })
+    .eq('id', messageId);
+  if (error) throw error;
+}
+
+export async function deleteMessageForEveryone(messageId: string): Promise<void> {
+  const { error } = await supabase
+    .from('direct_messages')
+    .update({ deleted_for_everyone: true })
+    .eq('id', messageId);
+  if (error) throw error;
+}
+
+export async function editMessage(messageId: string, newBody: string): Promise<void> {
+  const { error } = await supabase
+    .from('direct_messages')
+    .update({ body: newBody, edited_at: new Date().toISOString() })
+    .eq('id', messageId);
+  if (error) throw error;
 }
 
 export async function sendMessage(
@@ -133,7 +168,9 @@ async function buildConversation(
 
   const { data: messages } = await supabase
     .from('direct_messages')
-    .select('body, audio_url, created_at')
+    .select(
+      'body, audio_url, created_at, deleted_for_sender, deleted_for_recipient, deleted_for_everyone'
+    )
     .eq('lease_id', leaseId)
     .or(
       `and(sender_profile_id.eq.${myProfileId},recipient_profile_id.eq.${counterpartProfileId}),and(sender_profile_id.eq.${counterpartProfileId},recipient_profile_id.eq.${myProfileId})`

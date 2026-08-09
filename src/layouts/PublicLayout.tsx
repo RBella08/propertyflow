@@ -2,10 +2,12 @@ import { Outlet, Link } from 'react-router';
 import { FaFacebookF, FaInstagram, FaTwitter } from 'react-icons/fa';
 import { Mail, Phone } from 'lucide-react';
 import { Navbar } from '@/components/navigation/Navbar';
+import { ScrollToTop } from '@/components/ScrollToTop';
 
 export function PublicLayout() {
   return (
     <div className="flex min-h-screen flex-col">
+      <ScrollToTop />
       <Navbar />
       <main className="flex-1">
         <Outlet />

@@ -1,4 +1,3 @@
-// Ordered from lowest to highest tier — used to check "does my plan meet the minimum required?"
 const PLAN_RANK: Record<string, number> = {
   Free: 0,
   'Starter Monthly': 1,
@@ -13,13 +12,14 @@ const PLAN_RANK: Record<string, number> = {
   'Enterprise Yearly': 5,
 };
 
-export const FEATURE_MIN_PLAN: Record<string, string> = {
+export const FEATURE_MIN_PLAN = {
   bulkImport: 'Starter Monthly',
   ledger: 'Growth Monthly',
   ownerStatement: 'Growth Monthly',
   roiTracking: 'Growth Monthly',
   tenantScreening: 'Professional Monthly',
-};
+  multipleManagers: 'Business Monthly',
+} as const;
 
 export function hasFeatureAccess(
   myPlanName: string,
@@ -27,4 +27,9 @@ export function hasFeatureAccess(
 ): boolean {
   const required = FEATURE_MIN_PLAN[feature];
   return (PLAN_RANK[myPlanName] ?? 0) >= (PLAN_RANK[required] ?? 0);
+}
+
+export function getPropertyLimitLabel(myPlanName: string): string {
+  if (PLAN_RANK[myPlanName] >= PLAN_RANK['Enterprise Monthly']) return 'Unlimited properties';
+  return 'Limited by your plan — see Plans page';
 }

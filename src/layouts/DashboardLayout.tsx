@@ -1,13 +1,16 @@
 import { Outlet } from 'react-router';
 import { Sidebar } from '@/components/navigation/Sidebar';
 import { DashboardHeader } from '@/components/navigation/DashboardHeader';
+import { ScrollToTop } from '@/components/ScrollToTop';
 
 export function DashboardLayout() {
   return (
     <div className="flex min-h-screen">
+      <ScrollToTop />
       <Sidebar />
       <div className="flex flex-1 flex-col">
         <DashboardHeader />
+
         <main className="flex-1 p-4 md:p-6">
           <Outlet />
         </main>

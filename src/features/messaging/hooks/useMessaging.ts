@@ -8,6 +8,9 @@ import {
   getLandlordConversations,
   getManagerConversations,
   deleteMessage,
+  editMessage,
+  deleteMessageForMe,
+  deleteMessageForEveryone,
 } from '../services/messagingService';
 import { getTenantId } from '@/features/payments/services/paymentService';
 import { supabase } from '@/lib/supabase';
@@ -35,7 +38,7 @@ export function useLeaseMessages(
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'direct_messages',
           filter: `lease_id=eq.${leaseId}`,
@@ -59,6 +62,32 @@ export function useLeaseMessages(
   }, [leaseId, profile?.id, counterpartProfileId]);
 
   return query;
+}
+
+export function useDeleteMessageForMe() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ messageId, iAmSender }: { messageId: string; iAmSender: boolean }) =>
+      deleteMessageForMe(messageId, iAmSender),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lease-messages'] }),
+  });
+}
+
+export function useDeleteMessageForEveryone() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (messageId: string) => deleteMessageForEveryone(messageId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lease-messages'] }),
+  });
+}
+
+export function useEditMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ messageId, newBody }: { messageId: string; newBody: string }) =>
+      editMessage(messageId, newBody),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lease-messages'] }),
+  });
 }
 
 export function useSendMessage() {

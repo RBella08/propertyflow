@@ -6,6 +6,7 @@ import { router } from '@/routes/router';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { Toaster } from '@/components/ui/sonner';
+import { ScrollToTopButton } from '@/components/ScrollToTopButton';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -25,6 +26,7 @@ createRoot(document.getElementById('root')!).render(
         <AuthProvider>
           <RouterProvider router={router} />
           <Toaster position="top-right" />
+          <ScrollToTopButton />
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

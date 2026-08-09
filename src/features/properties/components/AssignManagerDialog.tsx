@@ -12,6 +12,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { findManagerByEmail, assignManagerToProperty } from '../services/propertyManagementService';
+import { useMyPlan } from '@/features/plans/hooks/useMyPlan';
+import { hasFeatureAccess } from '@/features/plans/planFeatures';
+import { supabase } from '@/lib/supabase';
 
 interface AssignManagerDialogProps {
   open: boolean;
@@ -37,6 +40,7 @@ export function AssignManagerDialog({
   );
   const [errorMessage, setErrorMessage] = useState('');
   const [saving, setSaving] = useState(false);
+  const { data: myPlan } = useMyPlan();
 
   const handleLookup = async () => {
     setStatus('loading');
@@ -54,6 +58,19 @@ export function AssignManagerDialog({
     if (!foundManager) return;
     setSaving(true);
     try {
+      if (!hasFeatureAccess(myPlan ?? 'Free', 'multipleManagers')) {
+        const { count } = await supabase
+          .from('properties')
+          .select('id', { count: 'exact', head: true })
+          .not('manager_id', 'is', null)
+          .neq('id', propertyId);
+
+        if ((count ?? 0) > 0) {
+          toast.error('Your plan only supports one manager. Upgrade to Business to assign more.');
+          return;
+        }
+      }
+
       await assignManagerToProperty(propertyId, foundManager.profileId);
       toast.success('Manager assigned');
       onAssigned();

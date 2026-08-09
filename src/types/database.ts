@@ -234,6 +234,10 @@ export type Database = {
           audio_url: string | null;
           body: string;
           created_at: string;
+          deleted_for_everyone: boolean;
+          deleted_for_recipient: boolean;
+          deleted_for_sender: boolean;
+          edited_at: string | null;
           id: string;
           image_url: string | null;
           lease_id: string;
@@ -245,6 +249,10 @@ export type Database = {
           audio_url?: string | null;
           body: string;
           created_at?: string;
+          deleted_for_everyone?: boolean;
+          deleted_for_recipient?: boolean;
+          deleted_for_sender?: boolean;
+          edited_at?: string | null;
           id?: string;
           image_url?: string | null;
           lease_id: string;
@@ -256,6 +264,10 @@ export type Database = {
           audio_url?: string | null;
           body?: string;
           created_at?: string;
+          deleted_for_everyone?: boolean;
+          deleted_for_recipient?: boolean;
+          deleted_for_sender?: boolean;
+          edited_at?: string | null;
           id?: string;
           image_url?: string | null;
           lease_id?: string;
@@ -992,6 +1004,51 @@ export type Database = {
             columns: ['tenant_id'];
             isOneToOne: false;
             referencedRelation: 'tenants';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      plan_payments: {
+        Row: {
+          amount: number;
+          created_at: string;
+          id: string;
+          landlord_profile_id: string;
+          plan_id: string;
+          reference: string;
+          status: string;
+        };
+        Insert: {
+          amount: number;
+          created_at?: string;
+          id?: string;
+          landlord_profile_id: string;
+          plan_id: string;
+          reference: string;
+          status?: string;
+        };
+        Update: {
+          amount?: number;
+          created_at?: string;
+          id?: string;
+          landlord_profile_id?: string;
+          plan_id?: string;
+          reference?: string;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'plan_payments_landlord_profile_id_fkey';
+            columns: ['landlord_profile_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'plan_payments_plan_id_fkey';
+            columns: ['plan_id'];
+            isOneToOne: false;
+            referencedRelation: 'subscription_plans';
             referencedColumns: ['id'];
           },
         ];

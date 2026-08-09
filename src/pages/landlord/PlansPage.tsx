@@ -56,15 +56,23 @@ export function PlansPage() {
         invoiceId: `plan-${planId}`,
         tenantId: profile!.id,
         subaccountCode: null,
-        onSuccess: async () => {
-          await supabase
-            .from('landlords')
-            .update({
-              plan_id: planId,
-              plan_expires_at: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
-            })
-            .eq('profile_id', profile!.id);
+        metadata: {
+          invoice_id: `plan-${planId}`,
+          tenant_id: profile!.id,
+          landlord_profile_id: profile!.id,
+          plan_id: planId,
+        },
+        onSuccess: async (reference) => {
+          const { data, error } = await supabase.functions.invoke('verify-plan-payment', {
+            body: { reference },
+          });
+          if (error || !data.success) {
+            toast.error('Could not verify payment', { description: data?.message });
+            setSubscribing(null);
+            return;
+          }
           toast.success(`Upgraded to ${name}!`);
+          setSubscribing(null);
         },
         onClose: () => setSubscribing(null),
       });

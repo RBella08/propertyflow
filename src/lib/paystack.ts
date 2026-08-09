@@ -44,6 +44,7 @@ export async function openPaystackCheckout(config: {
   invoiceId: string;
   tenantId: string;
   subaccountCode?: string | null;
+  metadata?: Record<string, string>;
   onSuccess: (reference: string) => void;
   onClose: () => void;
 }) {
