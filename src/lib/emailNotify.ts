@@ -17,3 +17,16 @@ export async function sendEmailToProfile(
     console.error('Email notification failed:', err);
   }
 }
+
+export async function sendPushToProfile(
+  profileId: string,
+  title: string,
+  body: string,
+  url?: string
+): Promise<void> {
+  try {
+    await supabase.functions.invoke('send-push', { body: { profileId, title, body, url } });
+  } catch (err) {
+    console.error('Push notification failed:', err);
+  }
+}

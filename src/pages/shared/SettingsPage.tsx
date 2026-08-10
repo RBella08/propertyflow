@@ -1,6 +1,8 @@
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +12,12 @@ import { changePassword } from '@/features/auth/services/authService';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { useTheme } from '@/providers/ThemeProvider';
 import { cn } from '@/lib/utils';
+import {
+  isPushSupported,
+  getPushPermissionStatus,
+  subscribeToPush,
+  unsubscribeFromPush,
+} from '@/lib/pushNotifications';
 
 const THEMES = [
   { value: 'light', label: 'Light' },
@@ -18,15 +26,45 @@ const THEMES = [
 ] as const;
 
 export function SettingsPage() {
-  const { user } = useAuthContext();
+  const { user, profile } = useAuthContext();
   const { theme, setTheme } = useTheme();
+
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+
+  useEffect(() => {
+    isPushSupported().then(setPushSupported);
+    getPushPermissionStatus().then((status) => setPushEnabled(status === 'granted'));
+  }, []);
+
+  const handleTogglePush = async () => {
+    setPushLoading(true);
+    try {
+      if (pushEnabled) {
+        await unsubscribeFromPush();
+        setPushEnabled(false);
+        toast.success('Push notifications turned off');
+      } else {
+        await subscribeToPush(profile!.id);
+        setPushEnabled(true);
+        toast.success('Push notifications turned on');
+      }
+    } catch (error) {
+      toast.error('Could not update push notifications', {
+        description: error instanceof Error ? error.message : 'Something went wrong',
+      });
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<ChangePasswordInput>({ resolver: zodResolver(changePasswordSchema) });
+  } = useForm({ resolver: zodResolver(changePasswordSchema) });
 
   const onSubmit = async (data: ChangePasswordInput) => {
     if (!user?.email) return;
@@ -42,8 +80,8 @@ export function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <h1 className="text-h4 text-foreground">Settings</h1>
+    <div>
+      <h1>Settings</h1>
 
       <Card>
         <CardHeader>
@@ -67,6 +105,25 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
+      {pushSupported && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-h6">
+              <Bell className="h-4 w-4" /> Push Notifications
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleTogglePush}
+              loading={pushLoading}
+              variant={pushEnabled ? 'outline' : 'default'}
+            >
+              {pushEnabled ? 'Turn Off' : 'Turn On'} Push Notifications
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle className="text-h6">Change Password</CardTitle>
@@ -84,6 +141,7 @@ export function SettingsPage() {
                 <p className="text-caption text-destructive">{errors.currentPassword.message}</p>
               )}
             </div>
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="newPassword">New Password</Label>
               <PasswordInput
@@ -95,6 +153,7 @@ export function SettingsPage() {
                 <p className="text-caption text-destructive">{errors.newPassword.message}</p>
               )}
             </div>
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
               <PasswordInput
@@ -106,6 +165,7 @@ export function SettingsPage() {
                 <p className="text-caption text-destructive">{errors.confirmNewPassword.message}</p>
               )}
             </div>
+
             <Button type="submit" loading={isSubmitting} className="w-fit">
               Update Password
             </Button>
