@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuthContext } from '@/providers/AuthProvider';
 import { openPaystackCheckout } from '@/lib/paystack';
 
-const DURATION_FILTERS = ['all', 1, 2, 3, 6, 12] as const;
+const DURATION_OPTIONS = [1, 2, 3, 6, 12] as const;
 
 function formatNaira(amount: number) {
   return new Intl.NumberFormat('en-NG', {
@@ -23,7 +23,7 @@ function formatNaira(amount: number) {
 export function PlansPage() {
   const { profile } = useAuthContext();
   const [subscribing, setSubscribing] = useState<string | null>(null);
-  const [durationFilter, setDurationFilter] = useState<(typeof DURATION_FILTERS)[number]>('all');
+  const [selectedDuration, setSelectedDuration] = useState<(typeof DURATION_OPTIONS)[number]>(1);
 
   const { data: plans, isLoading } = useQuery({
     queryKey: ['subscription-plans'],
@@ -47,10 +47,10 @@ export function PlansPage() {
     enabled: !!profile?.id,
   });
 
-  const filteredPlans = plans?.filter((p) => {
-    if (p.price === 0) return true; // Free always shown
-    return durationFilter === 'all' || p.duration_months === durationFilter;
-  });
+  const freePlan = plans?.find((p) => p.price === 0);
+  const paidPlansForDuration = plans?.filter(
+    (p) => p.price > 0 && p.duration_months === selectedDuration
+  );
 
   const handleSubscribe = async (planId: string, price: number, name: string) => {
     if (price === 0) return;
@@ -67,7 +67,7 @@ export function PlansPage() {
           });
           if (error || !data?.success) {
             toast.error('Could not verify payment', {
-              description: data?.message ?? 'Please contact support.',
+              description: data?.message ?? 'Please contact support with your payment reference.',
             });
             setSubscribing(null);
             return;
@@ -84,7 +84,9 @@ export function PlansPage() {
     }
   };
 
-  if (isLoading) return <Skeleton className="h-96" />;
+  if (isLoading) {
+    return <Skeleton className="h-96" />;
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -95,35 +97,60 @@ export function PlansPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {DURATION_FILTERS.map((d) => (
-          <Button
-            key={d}
-            size="sm"
-            variant={durationFilter === d ? 'default' : 'outline'}
-            onClick={() => setDurationFilter(d)}
-          >
-            {d === 'all' ? 'All' : `${d} Month${d > 1 ? 's' : ''}`}
-          </Button>
-        ))}
+      <div>
+        <p className="mb-2 text-small font-medium text-foreground">Select a billing period:</p>
+        <div className="flex flex-wrap gap-2">
+          {DURATION_OPTIONS.map((months) => (
+            <Button
+              key={months}
+              size="sm"
+              variant={selectedDuration === months ? 'default' : 'outline'}
+              onClick={() => setSelectedDuration(months)}
+            >
+              {months} Month{months > 1 ? 's' : ''}
+            </Button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredPlans?.map((plan) => (
+        {freePlan && (
+          <Card className={myPlanId === freePlan.id ? 'border-primary' : ''}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-h6">{freePlan.name}</CardTitle>
+                {myPlanId === freePlan.id && <Badge variant="success">Current</Badge>}
+              </div>
+              <p className="text-h5 font-bold text-foreground">Free</p>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-4">
+              <ul className="flex flex-col gap-2 text-small text-muted-foreground">
+                {freePlan.features.map((f: string) => (
+                  <li key={f} className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 shrink-0 text-success" /> {f}
+                  </li>
+                ))}
+              </ul>
+              <Button disabled className="w-full">
+                {myPlanId === freePlan.id ? 'Current Plan' : 'Free Tier'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {paidPlansForDuration?.map((plan) => (
           <Card key={plan.id} className={myPlanId === plan.id ? 'border-primary' : ''}>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-h6">{plan.name}</CardTitle>
+                <CardTitle className="text-h6">{plan.tier_name}</CardTitle>
                 {myPlanId === plan.id && <Badge variant="success">Current</Badge>}
               </div>
               <p className="text-h5 font-bold text-foreground">
-                {plan.price === 0 ? 'Free' : formatNaira(plan.price)}
-                {plan.price > 0 && (
-                  <span className="text-small font-normal text-muted-foreground">
-                    {' '}
-                    / {plan.duration_months} mo
-                  </span>
-                )}
+                {formatNaira(plan.price)}
+                <span className="text-small font-normal text-muted-foreground">
+                  {' '}
+                  / {plan.duration_months} mo
+                </span>
               </p>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
@@ -136,11 +163,11 @@ export function PlansPage() {
               </ul>
               <Button
                 onClick={() => handleSubscribe(plan.id, plan.price, plan.name)}
-                disabled={myPlanId === plan.id || plan.price === 0}
+                disabled={myPlanId === plan.id}
                 loading={subscribing === plan.id}
                 className="w-full"
               >
-                {myPlanId === plan.id ? 'Current Plan' : plan.price === 0 ? 'Free Tier' : 'Upgrade'}
+                {myPlanId === plan.id ? 'Current Plan' : 'Upgrade'}
               </Button>
             </CardContent>
           </Card>

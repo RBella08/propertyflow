@@ -145,7 +145,9 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
                   )}
                 >
                   {m.deletedForEveryone ? (
-                    <p className="italic opacity-70">You deleted this message</p>
+                    <p className="italic opacity-70">
+                      {isMine ? 'You deleted this message' : 'This message was deleted'}
+                    </p>
                   ) : (
                     <>
                       {images.length > 0 && (

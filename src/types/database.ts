@@ -306,6 +306,7 @@ export type Database = {
         Row: {
           document_type: string;
           document_url: string;
+          expiry_date: string | null;
           id: string;
           review_note: string | null;
           reviewed_at: string | null;
@@ -317,6 +318,7 @@ export type Database = {
         Insert: {
           document_type: string;
           document_url: string;
+          expiry_date?: string | null;
           id?: string;
           review_note?: string | null;
           reviewed_at?: string | null;
@@ -328,6 +330,7 @@ export type Database = {
         Update: {
           document_type?: string;
           document_url?: string;
+          expiry_date?: string | null;
           id?: string;
           review_note?: string | null;
           reviewed_at?: string | null;
@@ -2188,6 +2191,7 @@ export type Database = {
       };
     };
     Functions: {
+      check_document_expiry: { Args: never; Returns: undefined };
       current_user_role: { Args: never; Returns: string };
       expire_leases: { Args: never; Returns: undefined };
       get_current_profile_id: { Args: never; Returns: string };

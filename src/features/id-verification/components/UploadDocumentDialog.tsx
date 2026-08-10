@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,7 @@ export function UploadDocumentDialog({ open, onClose }: UploadDocumentDialogProp
   const [documentType, setDocumentType] = useState<DocumentType>('nin_slip');
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [expiryDate, setExpiryDate] = useState('');
 
   const handleFileChange = (selected: File | null) => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -50,7 +52,7 @@ export function UploadDocumentDialog({ open, onClose }: UploadDocumentDialogProp
       return;
     }
     try {
-      await submitVerification.mutateAsync({ documentType, file });
+      await submitVerification.mutateAsync({ documentType, file, expiryDate });
       toast.success('Document submitted', { description: 'Your landlord will review it shortly.' });
       handleClear();
       onClose();
@@ -86,6 +88,18 @@ export function UploadDocumentDialog({ open, onClose }: UploadDocumentDialogProp
                 </option>
               ))}
             </select>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="expiryDate">Expiry Date (if applicable)</Label>
+              <Input
+                id="expiryDate"
+                type="date"
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
+              />
+              <p className="text-caption text-muted-foreground">
+                Leave blank for documents like NIN slips that don't expire.
+              </p>
+            </div>
           </div>
 
           {!file ? (

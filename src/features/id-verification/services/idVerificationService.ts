@@ -10,6 +10,7 @@ export interface VerificationItem {
   reviewNote: string | null;
   submittedAt: string;
   reviewedAt: string | null;
+  expiryDate: string | null;
   signedUrl: string | null;
 }
 
@@ -22,7 +23,8 @@ async function getSignedUrl(path: string): Promise<string | null> {
 export async function submitVerification(
   tenantProfileId: string,
   documentType: DocumentType,
-  file: File
+  file: File,
+  expiryDate?: string
 ): Promise<void> {
   const ext = file.name.split('.').pop();
   const path = `${tenantProfileId}/${crypto.randomUUID()}.${ext}`;
@@ -35,6 +37,7 @@ export async function submitVerification(
     document_type: documentType,
     document_url: path,
     status: 'pending',
+    expiry_date: expiryDate || null,
   });
   if (error) throw error;
 }
@@ -42,7 +45,9 @@ export async function submitVerification(
 export async function getMyVerifications(tenantProfileId: string): Promise<VerificationItem[]> {
   const { data, error } = await supabase
     .from('id_verifications')
-    .select('id, document_type, document_url, status, review_note, submitted_at, reviewed_at')
+    .select(
+      'id, document_type, document_url, status, review_note, submitted_at, reviewed_at, expiry_date'
+    )
     .eq('tenant_profile_id', tenantProfileId)
     .order('submitted_at', { ascending: false });
   if (error) throw error;
@@ -56,6 +61,7 @@ export async function getMyVerifications(tenantProfileId: string): Promise<Verif
       reviewNote: v.review_note,
       submittedAt: v.submitted_at,
       reviewedAt: v.reviewed_at,
+      expiryDate: v.expiry_date,
       signedUrl: await getSignedUrl(v.document_url),
     }))
   );
@@ -64,7 +70,9 @@ export async function getMyVerifications(tenantProfileId: string): Promise<Verif
 export async function getTenantVerifications(tenantProfileId: string): Promise<VerificationItem[]> {
   const { data, error } = await supabase
     .from('id_verifications')
-    .select('id, document_type, document_url, status, review_note, submitted_at, reviewed_at')
+    .select(
+      'id, document_type, document_url, status, review_note, submitted_at, reviewed_at, expiry_date'
+    )
     .eq('tenant_profile_id', tenantProfileId)
     .order('submitted_at', { ascending: false });
   if (error) throw error;
@@ -78,6 +86,7 @@ export async function getTenantVerifications(tenantProfileId: string): Promise<V
       reviewNote: v.review_note,
       submittedAt: v.submitted_at,
       reviewedAt: v.reviewed_at,
+      expiryDate: v.expiry_date,
       signedUrl: await getSignedUrl(v.document_url),
     }))
   );

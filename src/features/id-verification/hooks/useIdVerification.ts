@@ -29,9 +29,17 @@ export function useTenantVerifications(tenantProfileId: string | undefined) {
 export function useSubmitVerification() {
   const { profile } = useAuthContext();
   const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: ({ documentType, file }: { documentType: DocumentType; file: File }) =>
-      submitVerification(profile!.id, documentType, file),
+    mutationFn: ({
+      documentType,
+      file,
+      expiryDate,
+    }: {
+      documentType: DocumentType;
+      file: File;
+      expiryDate?: string;
+    }) => submitVerification(profile!.id, documentType, file, expiryDate),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-verifications', profile?.id] }),
   });
 }

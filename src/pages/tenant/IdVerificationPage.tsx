@@ -52,6 +52,13 @@ export function IdVerificationPage() {
                   {v.status === 'rejected' && v.reviewNote && (
                     <p className="text-caption text-destructive">Reason: {v.reviewNote}</p>
                   )}
+                  {v.expiryDate && (
+                    <p
+                      className={`text-caption ${new Date(v.expiryDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) ? 'text-warning' : 'text-muted-foreground'}`}
+                    >
+                      Expires {new Date(v.expiryDate).toLocaleDateString()}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   {v.signedUrl && (
