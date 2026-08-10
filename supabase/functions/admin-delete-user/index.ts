@@ -40,12 +40,35 @@ Deno.serve(async (req) => {
     const { targetUserId } = await req.json();
     if (!targetUserId) throw new Error('Missing targetUserId');
 
+    const { data: targetProfile } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('user_id', targetUserId)
+      .single();
+
+    // Explicitly clean up storage files first — Storage's internal
+    // "owner" link doesn't always allow a database-level cascade fix,
+    // so we remove the files directly instead of relying on that.
+    if (targetProfile) {
+      const buckets = ['avatars', 'id-documents'];
+      for (const bucket of buckets) {
+        try {
+          const { data: files } = await admin.storage.from(bucket).list(targetProfile.id);
+          if (files && files.length > 0) {
+            const paths = files.map((f) => `${targetProfile.id}/${f.name}`);
+            await admin.storage.from(bucket).remove(paths);
+          }
+        } catch (storageError) {
+          console.error(`Storage cleanup failed for bucket ${bucket}:`, storageError);
+        }
+      }
+    }
+
     const { error: deleteError } = await admin.auth.admin.deleteUser(targetUserId);
 
     if (deleteError) {
-      // Real cause is almost always related records blocking the delete
       throw new Error(
-        `Could not delete this account — it likely has related properties, leases, or payment records that must be removed first. Consider suspending it instead. (Details: ${deleteError.message})`
+        `Still could not delete: ${deleteError.message}. Please copy this exact message and send it back.`
       );
     }
 

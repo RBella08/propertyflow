@@ -31,7 +31,7 @@ export async function createAnnouncement(
       .from('leases')
       .select('tenant_id')
       .in('unit_id', unitIds)
-      .eq('status', 'active');
+      .in('status', ['active', 'renewed']);
     const tenantIds = Array.from(new Set((leases ?? []).map((l) => l.tenant_id)));
     if (tenantIds.length === 0) return;
 

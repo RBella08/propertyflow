@@ -29,6 +29,23 @@ export async function getNotifications(userId: string): Promise<NotificationItem
   }));
 }
 
+export async function insertNotificationWithPush(
+  userId: string,
+  title: string,
+  message: string,
+  type: string
+): Promise<void> {
+  await supabase.from('notifications').insert({ user_id: userId, title, message, type });
+
+  try {
+    await supabase.functions.invoke('send-push', {
+      body: { profileId: userId, title, body: message, url: '/notifications' },
+    });
+  } catch (err) {
+    console.error('Push notification failed:', err);
+  }
+}
+
 export async function deleteNotification(notificationId: string): Promise<void> {
   const { error } = await supabase.from('notifications').delete().eq('id', notificationId);
   if (error) throw error;

@@ -19,6 +19,7 @@ import { useHomeStats } from '@/features/home/hooks/useHomeStats';
 import { useProperties } from '@/features/properties/hooks/useProperties';
 import { PropertyCard } from '@/features/properties/components/PropertyCard';
 import { PropertyCardSkeleton } from '@/features/properties/components/PropertyCardSkeleton';
+import { usePropertiesByCity } from '@/features/home/hooks/usePropertiesByCity';
 
 const HOW_IT_WORKS = [
   {
@@ -79,6 +80,7 @@ const TESTIMONIALS = [
 export function HomePage() {
   const { data: stats, isLoading: statsLoading } = useHomeStats();
   const { data: featured, isLoading: propertiesLoading } = useProperties({}, 1, 6);
+  const { data: cities } = usePropertiesByCity();
 
   return (
     <div className="flex flex-col overflow-hidden">
@@ -117,6 +119,31 @@ export function HomePage() {
               </Button>
             </div>
           </AnimatedSection>
+        </div>
+      </section>
+
+      <section className="border-b py-12">
+        <div className="container">
+          <AnimatedSection className="mb-6 text-center">
+            <h2 className="text-h4 text-foreground">Browse by Location</h2>
+            <p className="mt-1 text-muted-foreground">Find properties in your city.</p>
+          </AnimatedSection>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {cities?.map((c, i) => (
+              <AnimatedSection key={`${c.city}-${c.state}`} delay={i * 60}>
+                <Link
+                  to={`/properties?city=${encodeURIComponent(c.city)}`}
+                  className="flex flex-col items-center gap-1 rounded-card border p-4 text-center transition-colors hover:bg-accent"
+                >
+                  <MapPin className="h-5 w-5 text-primary" />
+                  <span className="font-medium text-foreground">{c.city}</span>
+                  <span className="text-caption text-muted-foreground">
+                    {c.propertyCount} properties
+                  </span>
+                </Link>
+              </AnimatedSection>
+            ))}
+          </div>
         </div>
       </section>
 
