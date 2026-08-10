@@ -18,6 +18,8 @@ export const FEATURE_MIN_TIER = {
   multipleManagers: 'Business',
 } as const;
 
+export const FEATURE_MIN_PLAN = FEATURE_MIN_TIER;
+
 export function hasFeatureAccess(
   myTierName: string,
   feature: keyof typeof FEATURE_MIN_TIER
