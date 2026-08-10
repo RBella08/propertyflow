@@ -23,7 +23,7 @@ import {
 } from '../hooks/useMessaging';
 import { VoiceRecorder } from './VoiceRecorder';
 import { VideoPicker } from './VideoPicker';
-import { useMyPlan } from '@/features/plans/hooks/useMyPlan';
+import { useLeaseOwnerPlanTier } from '@/features/plans/hooks/useLeaseOwnerPlan';
 import { hasFeatureAccess, FEATURE_MIN_TIER } from '@/features/plans/planFeatures';
 import { useAuthContext } from '@/providers/AuthProvider';
 
@@ -48,8 +48,9 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const { data: myTier } = useMyPlan();
-  const canSendVideo = hasFeatureAccess(myTier ?? 'Free', 'chatVideo');
+  const { data: propertyOwnerTier } = useLeaseOwnerPlanTier(leaseId);
+  const canSendVideo = hasFeatureAccess(propertyOwnerTier ?? 'Free', 'chatVideo');
+  const canSendVoiceAndPhotos = hasFeatureAccess(propertyOwnerTier ?? 'Free', 'chatVoiceAndImages');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; isMine: boolean } | null>(null);
   const [editTarget, setEditTarget] = useState<{ id: string; body: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -253,17 +254,36 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
       )}
 
       <div className="flex min-w-0 flex-wrap gap-2">
-        <label className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center self-end rounded-md border hover:bg-accent">
-          <ImageIcon className="h-4 w-4 text-muted-foreground" />
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => handleImageSelect(e.target.files)}
-          />
-        </label>
-        <VoiceRecorder onSend={handleSendVoice} />
+        {canSendVoiceAndPhotos ? (
+          <>
+            <label className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center self-end rounded-md border hover:bg-accent">
+              <ImageIcon className="h-4 w-4 text-muted-foreground" />
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => handleImageSelect(e.target.files)}
+              />
+            </label>
+            <VoiceRecorder onSend={handleSendVoice} />
+          </>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="shrink-0 self-end opacity-50"
+            title={`Voice notes and photos require this landlord's plan to be ${FEATURE_MIN_TIER.chatVoiceAndImages} or higher`}
+            onClick={() =>
+              toast.info(
+                `This conversation needs the ${FEATURE_MIN_TIER.chatVoiceAndImages} plan to unlock voice notes and photos`
+              )
+            }
+          >
+            <Lock className="h-4 w-4" />
+          </Button>
+        )}
         {canSendVideo ? (
           <VideoPicker onSelect={setVideoFile} />
         ) : (

@@ -2068,6 +2068,7 @@ export type Database = {
           full_name: string | null;
           id: string | null;
           is_verified: boolean | null;
+          plan_tier: string | null;
           profile_id: string | null;
         };
         Relationships: [

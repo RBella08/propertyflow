@@ -105,14 +105,14 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {pushSupported && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-h6">
-              <Bell className="h-4 w-4" /> Push Notifications
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-h6">
+            <Bell className="h-4 w-4" /> Push Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {pushSupported ? (
             <Button
               onClick={handleTogglePush}
               loading={pushLoading}
@@ -120,9 +120,15 @@ export function SettingsPage() {
             >
               {pushEnabled ? 'Turn Off' : 'Turn On'} Push Notifications
             </Button>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-small text-muted-foreground">
+              On iPhone, push notifications only work once you&apos;ve added PropertyFlow to your
+              Home Screen: tap the Share icon in Safari, then &quot;Add to Home Screen.&quot; Open
+              the app from that icon and this option will appear here.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
