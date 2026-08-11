@@ -1,15 +1,18 @@
 import { supabase } from './supabase';
 
-function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
-  const bytes = Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
 
-  const buffer = new ArrayBuffer(bytes.byteLength);
-  new Uint8Array(buffer).set(bytes);
+  const buffer = new ArrayBuffer(rawData.length);
+  const bytes = new Uint8Array(buffer);
 
-  return buffer;
+  for (let i = 0; i < rawData.length; i++) {
+    bytes[i] = rawData.charCodeAt(i);
+  }
+
+  return bytes;
 }
 
 export async function isPushSupported(): Promise<boolean> {
@@ -22,11 +25,18 @@ export async function getPushPermissionStatus(): Promise<NotificationPermission 
 }
 
 export async function subscribeToPush(profileId: string): Promise<void> {
-  if (!(await isPushSupported()))
+  // Support check must happen synchronously, without any await before
+  // requestPermission — iOS Safari is stricter than Chrome/Android about
+  // preserving "this call came directly from a user tap," and any extra
+  // async step beforehand can silently invalidate that on iOS specifically.
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     throw new Error('Push notifications are not supported on this device.');
+  }
 
   const permission = await Notification.requestPermission();
-  if (permission !== 'granted') throw new Error('Notification permission was not granted.');
+  if (permission !== 'granted') {
+    throw new Error('Notification permission was not granted.');
+  }
 
   const registration = await navigator.serviceWorker.register('/sw.js');
   await navigator.serviceWorker.ready;
@@ -47,14 +57,17 @@ export async function subscribeToPush(profileId: string): Promise<void> {
     },
     { onConflict: 'endpoint' }
   );
+
   if (error) throw error;
 }
 
 export async function unsubscribeFromPush(): Promise<void> {
   const registration = await navigator.serviceWorker.getRegistration();
   const subscription = await registration?.pushManager.getSubscription();
+
   if (subscription) {
     await supabase.from('push_subscriptions').delete().eq('endpoint', subscription.endpoint);
+
     await subscription.unsubscribe();
   }
 }

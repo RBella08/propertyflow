@@ -2002,6 +2002,14 @@ export type Database = {
           },
         ];
       };
+      city_property_counts: {
+        Row: {
+          city: string | null;
+          property_count: number | null;
+          state: string | null;
+        };
+        Relationships: [];
+      };
       landlord_basic_info: {
         Row: {
           id: string | null;

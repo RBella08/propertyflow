@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router';
 import { useProperties } from '@/features/properties/hooks/useProperties';
 import { PropertyCard } from '@/features/properties/components/PropertyCard';
 import { PropertyCardSkeleton } from '@/features/properties/components/PropertyCardSkeleton';
@@ -12,7 +13,10 @@ import type {
 const PAGE_SIZE = 9;
 
 export function PropertyListingsPage() {
-  const [filters, setFilters] = useState<Filters>({});
+  const [searchParams] = useSearchParams();
+  const initialCity = searchParams.get('city') ?? undefined;
+
+  const [filters, setFilters] = useState<Filters>(initialCity ? { city: initialCity } : {});
   const [page, setPage] = useState(1);
   const [accumulated, setAccumulated] = useState<PropertyListItem[]>([]);
 
@@ -43,13 +47,6 @@ export function PropertyListingsPage() {
 
       <div className="mb-6">
         <PropertyFilters filters={filters} onChange={handleFiltersChange} />
-      </div>
-
-      <div className="mb-6">
-        <h2 className="text-h4 text-foreground">Recent Properties</h2>
-        <p className="text-muted-foreground">
-          Explore the latest verified rental properties available now.
-        </p>
       </div>
 
       {isError && (

@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
       .eq('user_id', targetUserId)
       .single();
 
+    // Storage cleanup — files tagged to this user in our own buckets.
     if (targetProfile) {
       const buckets = ['avatars', 'id-documents'];
       for (const bucket of buckets) {
@@ -61,11 +62,24 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Pre-clean internal Supabase auth-schema rows that GoTrue's own
+    // deleteUser() sometimes fails to clean up itself, causing the
+    // generic "Database error deleting user" response. This is the
+    // documented workaround for that specific GoTrue behavior.
+    const authTables = ['identities', 'sessions', 'mfa_factors', 'one_time_tokens'];
+    for (const table of authTables) {
+      try {
+        await admin.schema('auth').from(table).delete().eq('user_id', targetUserId);
+      } catch (cleanupError) {
+        console.error(`Auth cleanup failed for auth.${table}:`, cleanupError);
+      }
+    }
+
     const { error: deleteError } = await admin.auth.admin.deleteUser(targetUserId);
 
     if (deleteError) {
       throw new Error(
-        `Still could not delete: ${deleteError.message}. Please copy this exact message and send it back.`
+        `Still could not delete: ${deleteError.message}. If this persists, check Supabase Dashboard → Logs → Postgres Logs at this exact timestamp for the real underlying error, since Supabase hides the detailed reason from this API response.`
       );
     }
 

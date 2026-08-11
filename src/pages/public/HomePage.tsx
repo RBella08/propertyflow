@@ -143,6 +143,13 @@ export function HomePage() {
               </AnimatedSection>
             ))}
           </div>
+          <div className="mt-6 flex justify-center">
+            <Button variant="outline" asChild>
+              <Link to="/properties">
+                View All Cities <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </section>
 

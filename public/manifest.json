@@ -2,6 +2,7 @@
   "name": "PropertyFlow",
   "short_name": "PropertyFlow",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F8FAFC",
   "theme_color": "#2563EB",
@@ -9,7 +10,8 @@
     {
       "src": "/favicon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
     }
   ]
 }

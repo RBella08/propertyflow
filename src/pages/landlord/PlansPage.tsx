@@ -60,25 +60,39 @@ export function PlansPage() {
   ) => {
     if (price === 0) return;
 
-    const { data: landlordRow } = await supabase
+    // Fail-closed: if EITHER lookup below has any problem, we block the
+    // change and tell the landlord clearly — we never silently allow a
+    // downgrade through just because a query hiccuped.
+    const { data: landlordRow, error: landlordError } = await supabase
       .from('landlords')
       .select('id')
       .eq('profile_id', profile!.id)
       .single();
 
-    if (!landlordRow?.id) {
-      toast.error('Could not determine your landlord profile.');
+    if (landlordError || !landlordRow) {
+      toast.error('Could not verify your account before switching plans', {
+        description: 'Please try again. If this keeps happening, contact support.',
+      });
       return;
     }
 
-    const { count } = await supabase
+    const { count, error: countError } = await supabase
       .from('properties')
       .select('id', { count: 'exact', head: true })
       .eq('landlord_id', landlordRow.id);
 
-    if ((count ?? 0) > propertyLimit) {
+    if (countError) {
+      toast.error('Could not verify your current property count', {
+        description: 'Please try again. If this keeps happening, contact support.',
+      });
+      return;
+    }
+
+    const currentCount = count ?? 0;
+
+    if (currentCount > propertyLimit) {
       toast.error('This plan supports fewer properties than you currently have', {
-        description: `You have ${count} properties, but ${name} only supports ${propertyLimit}. Remove or archive some first, or choose a higher plan.`,
+        description: `You have ${currentCount} properties, but ${name} only supports ${propertyLimit}. Remove or archive some first, or choose a higher plan.`,
       });
       return;
     }

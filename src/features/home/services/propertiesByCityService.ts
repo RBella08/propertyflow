@@ -8,19 +8,26 @@ export interface CityGroup {
 
 export async function getPropertiesByCity(): Promise<CityGroup[]> {
   const { data, error } = await supabase
-    .from('properties')
-    .select('city, state')
-    .eq('status', 'active');
+    .from('city_property_counts')
+    .select('city, state, property_count')
+    .order('property_count', { ascending: false })
+    .limit(8);
+
   if (error) throw error;
 
-  const grouped = new Map<string, CityGroup>();
-  (data ?? []).forEach((p) => {
-    const key = `${p.city}-${p.state}`;
-    if (!grouped.has(key)) grouped.set(key, { city: p.city, state: p.state, propertyCount: 0 });
-    grouped.get(key)!.propertyCount += 1;
-  });
-
-  return Array.from(grouped.values())
-    .sort((a, b) => b.propertyCount - a.propertyCount)
-    .slice(0, 8);
+  return (data ?? [])
+    .filter(
+      (
+        row
+      ): row is typeof row & {
+        city: string;
+        state: string;
+        property_count: number;
+      } => row.city !== null && row.state !== null && row.property_count !== null
+    )
+    .map((row) => ({
+      city: row.city,
+      state: row.state,
+      propertyCount: row.property_count,
+    }));
 }
