@@ -9,6 +9,7 @@ export interface QuitNoticeItem {
   noticeText: string;
   createdAt: string;
   status: string;
+  revokedAt: string | null;
 }
 
 export async function serveQuitNotice(
@@ -41,7 +42,7 @@ export async function serveQuitNotice(
 export async function getQuitNoticesForLease(leaseId: string): Promise<QuitNoticeItem[]> {
   const { data, error } = await supabase
     .from('quit_notices')
-    .select('id, reason, vacate_by, notice_text, created_at, status')
+    .select('id, reason, vacate_by, notice_text, created_at, status, revoked_at')
     .eq('lease_id', leaseId)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -53,6 +54,7 @@ export async function getQuitNoticesForLease(leaseId: string): Promise<QuitNotic
     noticeText: n.notice_text,
     createdAt: n.created_at,
     status: n.status,
+    revokedAt: n.revoked_at,
   }));
 }
 
@@ -63,7 +65,7 @@ export async function revokeQuitNotice(
 ): Promise<void> {
   const { error } = await supabase
     .from('quit_notices')
-    .update({ status: 'revoked' })
+    .update({ status: 'revoked', revoked_at: new Date().toISOString() })
     .eq('id', noticeId);
   if (error) throw error;
 
