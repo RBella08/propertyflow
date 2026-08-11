@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { notifyUser } from '@/lib/emailNotify';
 
 export type DocumentType = 'nin_slip' | 'bvn_slip' | 'passport' | 'drivers_license' | 'voters_card';
 
@@ -42,18 +43,19 @@ export async function submitVerification(
   if (error) throw error;
 }
 
+const VERIFICATION_COLUMNS =
+  'id, document_type, document_url, status, review_note, submitted_at, reviewed_at, expiry_date';
+
 export async function getMyVerifications(tenantProfileId: string): Promise<VerificationItem[]> {
   const { data, error } = await supabase
     .from('id_verifications')
-    .select(
-      'id, document_type, document_url, status, review_note, submitted_at, reviewed_at, expiry_date'
-    )
+    .select(VERIFICATION_COLUMNS)
     .eq('tenant_profile_id', tenantProfileId)
     .order('submitted_at', { ascending: false });
   if (error) throw error;
 
   return Promise.all(
-    (data ?? []).map(async (v) => ({
+    (data ?? []).map(async (v: any) => ({
       id: v.id,
       documentType: v.document_type as DocumentType,
       documentPath: v.document_url,
@@ -70,15 +72,13 @@ export async function getMyVerifications(tenantProfileId: string): Promise<Verif
 export async function getTenantVerifications(tenantProfileId: string): Promise<VerificationItem[]> {
   const { data, error } = await supabase
     .from('id_verifications')
-    .select(
-      'id, document_type, document_url, status, review_note, submitted_at, reviewed_at, expiry_date'
-    )
+    .select(VERIFICATION_COLUMNS)
     .eq('tenant_profile_id', tenantProfileId)
     .order('submitted_at', { ascending: false });
   if (error) throw error;
 
   return Promise.all(
-    (data ?? []).map(async (v) => ({
+    (data ?? []).map(async (v: any) => ({
       id: v.id,
       documentType: v.document_type as DocumentType,
       documentPath: v.document_url,
@@ -110,15 +110,15 @@ export async function reviewVerification(
     .eq('id', verificationId);
   if (error) throw error;
 
-  await supabase.from('notifications').insert({
-    user_id: tenantProfileId,
-    title: status === 'approved' ? 'ID document approved' : 'ID document needs attention',
-    message:
-      status === 'approved'
-        ? 'Your submitted identification document has been approved.'
-        : `Your submitted document was not approved.${note ? ` Reason: ${note}` : ''}`,
-    type: 'announcement',
-  });
+  await notifyUser(
+    tenantProfileId,
+    status === 'approved' ? 'ID document approved' : 'ID document needs attention',
+    status === 'approved'
+      ? 'Your submitted identification document has been approved.'
+      : `Your submitted document was not approved.${note ? ` Reason: ${note}` : ''}`,
+    'announcement',
+    '/tenant/id-verification'
+  );
 }
 
 export async function deletePendingVerification(

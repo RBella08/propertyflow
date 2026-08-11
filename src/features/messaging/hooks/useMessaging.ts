@@ -4,13 +4,12 @@ import {
   getMessagesForConversation,
   sendMessage,
   markMessagesRead,
+  deleteMessageForMe,
+  deleteMessageForEveryone,
+  editMessage,
   getTenantConversations,
   getLandlordConversations,
   getManagerConversations,
-  deleteMessage,
-  editMessage,
-  deleteMessageForMe,
-  deleteMessageForEveryone,
 } from '../services/messagingService';
 import { getTenantId } from '@/features/payments/services/paymentService';
 import { supabase } from '@/lib/supabase';
@@ -64,32 +63,6 @@ export function useLeaseMessages(
   return query;
 }
 
-export function useDeleteMessageForMe() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ messageId, iAmSender }: { messageId: string; iAmSender: boolean }) =>
-      deleteMessageForMe(messageId, iAmSender),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lease-messages'] }),
-  });
-}
-
-export function useDeleteMessageForEveryone() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (messageId: string) => deleteMessageForEveryone(messageId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lease-messages'] }),
-  });
-}
-
-export function useEditMessage() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ messageId, newBody }: { messageId: string; newBody: string }) =>
-      editMessage(messageId, newBody),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lease-messages'] }),
-  });
-}
-
 export function useSendMessage() {
   const { profile } = useAuthContext();
   const queryClient = useQueryClient();
@@ -118,9 +91,34 @@ export function useSendMessage() {
   });
 }
 
+export function useDeleteMessageForMe() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ messageId, iAmSender }: { messageId: string; iAmSender: boolean }) =>
+      deleteMessageForMe(messageId, iAmSender),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lease-messages'] }),
+  });
+}
+
+export function useDeleteMessageForEveryone() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (messageId: string) => deleteMessageForEveryone(messageId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lease-messages'] }),
+  });
+}
+
+export function useEditMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ messageId, newBody }: { messageId: string; newBody: string }) =>
+      editMessage(messageId, newBody),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lease-messages'] }),
+  });
+}
+
 export function useTenantConversations() {
   const { profile } = useAuthContext();
-
   return useQuery({
     queryKey: ['tenant-conversations', profile?.id],
     queryFn: async () => getTenantConversations(await getTenantId(profile!.id), profile!.id),
@@ -130,7 +128,6 @@ export function useTenantConversations() {
 
 export function useLandlordConversations() {
   const { profile } = useAuthContext();
-
   return useQuery({
     queryKey: ['landlord-conversations', profile?.id],
     queryFn: () => getLandlordConversations(profile!.id),
@@ -140,7 +137,6 @@ export function useLandlordConversations() {
 
 export function useManagerConversations() {
   const { profile } = useAuthContext();
-
   return useQuery({
     queryKey: ['manager-conversations', profile?.id],
     queryFn: () => getManagerConversations(profile!.id),
@@ -179,14 +175,4 @@ export function useTypingIndicator(leaseId: string | undefined, myProfileId: str
   };
 
   return { otherIsTyping, broadcastTyping };
-}
-
-export function useDeleteMessage() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (messageId: string) => deleteMessage(messageId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lease-messages'] });
-    },
-  });
 }

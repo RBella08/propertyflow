@@ -46,9 +46,6 @@ Deno.serve(async (req) => {
       .eq('user_id', targetUserId)
       .single();
 
-    // Explicitly clean up storage files first — Storage's internal
-    // "owner" link doesn't always allow a database-level cascade fix,
-    // so we remove the files directly instead of relying on that.
     if (targetProfile) {
       const buckets = ['avatars', 'id-documents'];
       for (const bucket of buckets) {

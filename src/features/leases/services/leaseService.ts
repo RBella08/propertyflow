@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { getLandlordId } from '@/features/properties/services/propertyManagementService';
+import { sendEmailToProfile, notifyUser } from '@/lib/emailNotify';
 import type { LeaseFormInput } from '../schemas';
-import { sendEmailToProfile } from '@/lib/emailNotify';
 
 export interface LandlordLeaseItem {
   id: string;
@@ -36,6 +36,24 @@ export async function getAvailableUnitOptions(profileId: string): Promise<UnitOp
     .from('units')
     .select('id, unit_number, rent_amount, properties!inner(property_name, landlord_id)')
     .eq('properties.landlord_id', landlordId)
+    .eq('status', 'available')
+    .order('unit_number');
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    propertyName: row.properties.property_name,
+    unitNumber: row.unit_number,
+    rentAmount: row.rent_amount,
+  }));
+}
+
+export async function getAvailableUnitOptionsForManager(profileId: string): Promise<UnitOption[]> {
+  const { data, error } = await supabase
+    .from('units')
+    .select('id, unit_number, rent_amount, properties!inner(property_name, manager_id)')
+    .eq('properties.manager_id', profileId)
     .eq('status', 'available')
     .order('unit_number');
 
@@ -99,8 +117,6 @@ function getBillingPeriodLabel(startDate: string, billingCycle: string) {
 }
 
 export async function createLease(input: LeaseFormInput): Promise<void> {
-  // Guard against a race condition — confirm the unit is still available
-  // right before committing, in case another tab leased it moments ago.
   const { data: unit, error: unitError } = await supabase
     .from('units')
     .select('status')
@@ -111,12 +127,11 @@ export async function createLease(input: LeaseFormInput): Promise<void> {
     throw new Error('This unit is no longer available. Please choose another.');
   }
 
-  // One active lease per tenant, per FEATURES.md's stated business rule.
   const { data: existingActiveLease, error: activeLeaseError } = await supabase
     .from('leases')
     .select('id')
     .eq('tenant_id', input.tenantId)
-    .eq('status', 'active')
+    .in('status', ['active', 'renewed'])
     .maybeSingle();
   if (activeLeaseError) throw activeLeaseError;
   if (existingActiveLease) {
@@ -143,8 +158,6 @@ export async function createLease(input: LeaseFormInput): Promise<void> {
 
   if (leaseError) throw leaseError;
 
-  // Not a single atomic transaction (see Step 13 objective note) — each
-  // failure below is reported precisely rather than silently swallowed.
   const { error: unitUpdateError } = await supabase
     .from('units')
     .update({ status: 'occupied' })
@@ -171,72 +184,35 @@ export async function createLease(input: LeaseFormInput): Promise<void> {
     );
   }
 
-  // Auto-create the pending tenancy agreement — best-effort, doesn't
-  // block lease creation if it fails for any reason.
   try {
     await supabase.from('lease_agreements').insert({ lease_id: lease.id });
   } catch (agreementError) {
     console.error('Failed to auto-create tenancy agreement:', agreementError);
   }
 
-  const { data: tenantRow } = await supabase
-    .from('tenants')
-    .select('profile_id')
-    .eq('id', input.tenantId)
-    .single();
-
-  if (tenantRow) {
-    sendEmailToProfile(
-      tenantRow.profile_id,
-      'Your Lease Has Been Created — PropertyFlow',
-      `<p>Hello,</p><p>A new lease has been created for you. Log in to PropertyFlow to view the details and complete your tenancy agreement.</p>`
-    );
+  try {
+    const { data: tenantRow } = await supabase
+      .from('tenants')
+      .select('profile_id')
+      .eq('id', input.tenantId)
+      .single();
+    if (tenantRow) {
+      await notifyUser(
+        tenantRow.profile_id,
+        'Your lease has been created',
+        'A new lease has been created for you. Log in to view the details and complete your tenancy agreement.',
+        'lease_expiry',
+        '/tenant/lease'
+      );
+      await sendEmailToProfile(
+        tenantRow.profile_id,
+        'Your Lease Has Been Created — PropertyFlow',
+        `<p>Hello,</p><p>A new lease has been created for you. Log in to PropertyFlow to view the details and complete your tenancy agreement.</p>`
+      );
+    }
+  } catch (notifyError) {
+    console.error('Failed to notify tenant of new lease:', notifyError);
   }
-}
-
-export async function getAvailableUnitOptionsForManager(profileId: string): Promise<UnitOption[]> {
-  const { data, error } = await supabase
-    .from('units')
-    .select('id, unit_number, rent_amount, properties!inner(property_name, manager_id)')
-    .eq('properties.manager_id', profileId)
-    .eq('status', 'available')
-    .order('unit_number');
-
-  if (error) throw error;
-
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    propertyName: row.properties.property_name,
-    unitNumber: row.unit_number,
-    rentAmount: row.rent_amount,
-  }));
-}
-
-export async function getManagerLeases(profileId: string): Promise<LandlordLeaseItem[]> {
-  const { data, error } = await supabase
-    .from('leases')
-    .select(
-      `id, lease_number, start_date, end_date, monthly_rent, status,
-       units!inner(unit_number, properties!inner(property_name, manager_id)),
-       tenants!inner(profiles!inner(full_name, email))`
-    )
-    .eq('units.properties.manager_id', profileId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-
-  return (data ?? []).map((row: any) => ({
-    id: row.id,
-    leaseNumber: row.lease_number,
-    tenantName: row.tenants.profiles.full_name ?? row.tenants.profiles.email,
-    tenantProfileId: row.tenants.profile_id,
-    propertyName: row.units.properties.property_name,
-    unitNumber: row.units.unit_number,
-    startDate: row.start_date,
-    endDate: row.end_date,
-    monthlyRent: row.monthly_rent,
-    status: row.status,
-  }));
 }
 
 export async function getLandlordLeases(profileId: string): Promise<LandlordLeaseItem[]> {
@@ -268,30 +244,69 @@ export async function getLandlordLeases(profileId: string): Promise<LandlordLeas
   }));
 }
 
+export async function getManagerLeases(profileId: string): Promise<LandlordLeaseItem[]> {
+  const { data, error } = await supabase
+    .from('leases')
+    .select(
+      `id, lease_number, start_date, end_date, monthly_rent, status,
+       units!inner(unit_number, properties!inner(property_name, manager_id)),
+       tenants!inner(profile_id, profiles!inner(full_name, email))`
+    )
+    .eq('units.properties.manager_id', profileId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    leaseNumber: row.lease_number,
+    tenantName: row.tenants.profiles.full_name ?? row.tenants.profiles.email,
+    tenantProfileId: row.tenants.profile_id,
+    propertyName: row.units.properties.property_name,
+    unitNumber: row.units.unit_number,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    monthlyRent: row.monthly_rent,
+    status: row.status,
+  }));
+}
+
 export async function renewLease(leaseId: string, newEndDate: string): Promise<void> {
   const { error } = await supabase
     .from('leases')
     .update({ end_date: newEndDate, status: 'renewed' })
     .eq('id', leaseId);
   if (error) throw error;
-  const { data: lease } = await supabase
-    .from('leases')
-    .select('tenant_id')
-    .eq('id', leaseId)
-    .single();
-  if (lease) {
-    const { data: tenantRow } = await supabase
-      .from('tenants')
-      .select('profile_id')
-      .eq('id', lease.tenant_id)
+
+  try {
+    const { data: lease } = await supabase
+      .from('leases')
+      .select('tenant_id')
+      .eq('id', leaseId)
       .single();
-    if (tenantRow) {
-      sendEmailToProfile(
-        tenantRow.profile_id,
-        'Your Lease Has Been Renewed — PropertyFlow',
-        `<p>Hello,</p><p>Your lease has been renewed. New end date: ${newEndDate}.</p>`
-      );
+    if (lease) {
+      const { data: tenantRow } = await supabase
+        .from('tenants')
+        .select('profile_id')
+        .eq('id', lease.tenant_id)
+        .single();
+      if (tenantRow) {
+        await notifyUser(
+          tenantRow.profile_id,
+          'Your lease has been renewed',
+          `Your lease has been renewed. New end date: ${newEndDate}.`,
+          'lease_expiry',
+          '/tenant/lease'
+        );
+        await sendEmailToProfile(
+          tenantRow.profile_id,
+          'Your Lease Has Been Renewed — PropertyFlow',
+          `<p>Hello,</p><p>Your lease has been renewed. New end date: ${newEndDate}.</p>`
+        );
+      }
     }
+  } catch (notifyError) {
+    console.error('Failed to notify tenant of lease renewal:', notifyError);
   }
 }
 
@@ -319,8 +334,6 @@ export async function terminateLease(leaseId: string): Promise<void> {
     );
   }
 
-  // Notify the tenant — best-effort, doesn't block termination itself
-  // if the notification insert fails for any reason.
   try {
     const { data: tenant } = await supabase
       .from('tenants')
@@ -329,15 +342,14 @@ export async function terminateLease(leaseId: string): Promise<void> {
       .single();
 
     if (tenant) {
-      await supabase.from('notifications').insert({
-        user_id: tenant.profile_id,
-        title: 'Lease terminated',
-        message:
-          'Your lease has been terminated by your landlord. Contact them if you have questions.',
-        type: 'lease_expiry',
-      });
-
-      sendEmailToProfile(
+      await notifyUser(
+        tenant.profile_id,
+        'Lease terminated',
+        'Your lease has been terminated by your landlord. Contact them if you have questions.',
+        'lease_expiry',
+        '/tenant/lease'
+      );
+      await sendEmailToProfile(
         tenant.profile_id,
         'Your Lease Has Been Terminated — PropertyFlow',
         `<p>Hello,</p><p>Your lease has been terminated by your landlord. Please contact them if you have questions.</p>`

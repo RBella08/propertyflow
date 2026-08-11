@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { sendPushToProfile } from '@/lib/emailNotify';
 
 export interface ChatMessage {
   id: string;
@@ -24,6 +25,9 @@ export interface ChatConversation {
   unreadCount: number;
 }
 
+const MESSAGE_COLUMNS =
+  'id, sender_profile_id, body, image_url, audio_url, video_url, created_at, edited_at, read_at, deleted_for_sender, deleted_for_recipient, deleted_for_everyone';
+
 export async function getMessagesForConversation(
   leaseId: string,
   myProfileId: string,
@@ -31,9 +35,7 @@ export async function getMessagesForConversation(
 ): Promise<ChatMessage[]> {
   const { data, error } = await supabase
     .from('direct_messages')
-    .select(
-      'id, sender_profile_id, body, image_url, audio_url, video_url, created_at, edited_at, read_at, deleted_for_sender, deleted_for_recipient, deleted_for_everyone'
-    )
+    .select(MESSAGE_COLUMNS)
     .eq('lease_id', leaseId)
     .or(
       `and(sender_profile_id.eq.${myProfileId},recipient_profile_id.eq.${counterpartProfileId}),and(sender_profile_id.eq.${counterpartProfileId},recipient_profile_id.eq.${myProfileId})`
@@ -42,11 +44,11 @@ export async function getMessagesForConversation(
   if (error) throw error;
 
   return (data ?? [])
-    .filter((m) => {
+    .filter((m: any) => {
       const iAmSender = m.sender_profile_id === myProfileId;
       return iAmSender ? !m.deleted_for_sender : !m.deleted_for_recipient;
     })
-    .map((m) => ({
+    .map((m: any) => ({
       id: m.id,
       senderProfileId: m.sender_profile_id,
       body: m.deleted_for_everyone ? '' : m.body,
@@ -58,6 +60,89 @@ export async function getMessagesForConversation(
       readAt: m.read_at,
       deletedForEveryone: m.deleted_for_everyone,
     }));
+}
+
+export async function sendMessage(
+  leaseId: string,
+  senderProfileId: string,
+  recipientProfileId: string,
+  body: string,
+  imageFiles?: File[],
+  audioBlob?: Blob,
+  videoFile?: File
+): Promise<void> {
+  const imageUrls: string[] = [];
+
+  if (imageFiles && imageFiles.length > 0) {
+    for (const file of imageFiles) {
+      const ext = file.name.split('.').pop();
+      const path = `${leaseId}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('chat-media').upload(path, file);
+      if (uploadError) throw uploadError;
+      const { data } = await supabase.storage
+        .from('chat-media')
+        .createSignedUrl(path, 60 * 60 * 24 * 7);
+      const signed = await data;
+      if (signed?.signedUrl) imageUrls.push(signed.signedUrl);
+    }
+  }
+
+  let audioUrl: string | null = null;
+  if (audioBlob) {
+    const path = `${leaseId}/${crypto.randomUUID()}.webm`;
+    const { error: uploadError } = await supabase.storage
+      .from('chat-media')
+      .upload(path, audioBlob);
+    if (uploadError) throw uploadError;
+    const { data } = await supabase.storage
+      .from('chat-media')
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
+    audioUrl = (await data)?.signedUrl ?? null;
+  }
+
+  let videoUrl: string | null = null;
+  if (videoFile) {
+    const ext = videoFile.name.split('.').pop();
+    const path = `${leaseId}/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from('chat-media')
+      .upload(path, videoFile);
+    if (uploadError) throw uploadError;
+    const { data } = await supabase.storage
+      .from('chat-media')
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
+    videoUrl = (await data)?.signedUrl ?? null;
+  }
+
+  const { error } = await supabase.from('direct_messages').insert({
+    lease_id: leaseId,
+    sender_profile_id: senderProfileId,
+    recipient_profile_id: recipientProfileId,
+    body,
+    image_url: imageUrls.length > 0 ? imageUrls.join(',') : null,
+    audio_url: audioUrl,
+    video_url: videoUrl,
+  });
+  if (error) throw error;
+
+  // Push only — no notifications-page row, since the chat's own unread
+  // badges already cover that; this just fires the lock-screen alert.
+  const preview = body.trim() || (videoUrl ? '📹 Video' : audioUrl ? '🎤 Voice note' : '📷 Photo');
+  await sendPushToProfile(recipientProfileId, 'New message', preview, '/notifications');
+}
+
+export async function markMessagesRead(
+  leaseId: string,
+  myProfileId: string,
+  counterpartProfileId: string
+): Promise<void> {
+  await supabase
+    .from('direct_messages')
+    .update({ read_at: new Date().toISOString() })
+    .eq('lease_id', leaseId)
+    .eq('recipient_profile_id', myProfileId)
+    .eq('sender_profile_id', counterpartProfileId)
+    .is('read_at', null);
 }
 
 export async function deleteMessageForMe(messageId: string, iAmSender: boolean): Promise<void> {
@@ -84,83 +169,6 @@ export async function editMessage(messageId: string, newBody: string): Promise<v
   if (error) throw error;
 }
 
-export async function sendMessage(
-  leaseId: string,
-  senderProfileId: string,
-  recipientProfileId: string,
-  body: string,
-  imageFiles?: File[],
-  audioBlob?: Blob,
-  videoFile?: File
-): Promise<void> {
-  const imageUrls: string[] = [];
-
-  if (imageFiles && imageFiles.length > 0) {
-    for (const file of imageFiles) {
-      const ext = file.name.split('.').pop();
-      const path = `${leaseId}/${crypto.randomUUID()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('chat-media').upload(path, file);
-      if (uploadError) throw uploadError;
-      const { data } = await supabase.storage
-        .from('chat-media')
-        .createSignedUrl(path, 60 * 60 * 24 * 7);
-      if (data?.signedUrl) imageUrls.push(data.signedUrl);
-    }
-  }
-
-  let audioUrl: string | null = null;
-  if (audioBlob) {
-    const path = `${leaseId}/${crypto.randomUUID()}.webm`;
-    const { error: uploadError } = await supabase.storage
-      .from('chat-media')
-      .upload(path, audioBlob);
-    if (uploadError) throw uploadError;
-    const { data } = await supabase.storage
-      .from('chat-media')
-      .createSignedUrl(path, 60 * 60 * 24 * 7);
-    audioUrl = data?.signedUrl ?? null;
-  }
-
-  let videoUrl: string | null = null;
-  if (videoFile) {
-    const ext = videoFile.name.split('.').pop();
-    const path = `${leaseId}/${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from('chat-media')
-      .upload(path, videoFile);
-    if (uploadError) throw uploadError;
-    const { data } = await supabase.storage
-      .from('chat-media')
-      .createSignedUrl(path, 60 * 60 * 24 * 7);
-    videoUrl = data?.signedUrl ?? null;
-  }
-
-  const { error } = await supabase.from('direct_messages').insert({
-    lease_id: leaseId,
-    sender_profile_id: senderProfileId,
-    recipient_profile_id: recipientProfileId,
-    body,
-    image_url: imageUrls.length > 0 ? imageUrls.join(',') : null,
-    audio_url: audioUrl,
-    video_url: videoUrl,
-  });
-  if (error) throw error;
-}
-
-export async function markMessagesRead(
-  leaseId: string,
-  myProfileId: string,
-  counterpartProfileId: string
-): Promise<void> {
-  await supabase
-    .from('direct_messages')
-    .update({ read_at: new Date().toISOString() })
-    .eq('lease_id', leaseId)
-    .eq('recipient_profile_id', myProfileId)
-    .eq('sender_profile_id', counterpartProfileId)
-    .is('read_at', null);
-}
-
 async function buildConversation(
   leaseId: string,
   counterpartProfileId: string,
@@ -176,9 +184,7 @@ async function buildConversation(
 
   const { data: messages } = await supabase
     .from('direct_messages')
-    .select(
-      'body, audio_url, video_url, created_at, deleted_for_sender, deleted_for_recipient, deleted_for_everyone'
-    )
+    .select('body, created_at')
     .eq('lease_id', leaseId)
     .or(
       `and(sender_profile_id.eq.${myProfileId},recipient_profile_id.eq.${counterpartProfileId}),and(sender_profile_id.eq.${counterpartProfileId},recipient_profile_id.eq.${myProfileId})`
@@ -206,7 +212,6 @@ async function buildConversation(
   };
 }
 
-// Tenant side: one conversation PER counterpart (Landlord, and Manager if assigned)
 export async function getTenantConversations(
   tenantId: string,
   myProfileId: string
@@ -236,7 +241,7 @@ export async function getTenantConversations(
   const conversations: ChatConversation[] = [];
 
   const { data: landlord } = await supabase
-    .from('landlord_basic_info')
+    .from('landlord_public_info')
     .select('profile_id')
     .eq('id', property!.landlord_id)
     .single();
@@ -337,9 +342,4 @@ export async function getManagerConversations(profileId: string): Promise<ChatCo
     .select('id, property_name')
     .eq('manager_id', profileId);
   return buildConversationsForProperties(properties ?? [], profileId);
-}
-
-export async function deleteMessage(messageId: string): Promise<void> {
-  const { error } = await supabase.from('direct_messages').delete().eq('id', messageId);
-  if (error) throw error;
 }

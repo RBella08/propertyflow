@@ -16,10 +16,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AnimatedSection } from '@/components/AnimatedSection';
 import { useHomeStats } from '@/features/home/hooks/useHomeStats';
+import { usePropertiesByCity } from '@/features/home/hooks/usePropertiesByCity';
 import { useProperties } from '@/features/properties/hooks/useProperties';
 import { PropertyCard } from '@/features/properties/components/PropertyCard';
 import { PropertyCardSkeleton } from '@/features/properties/components/PropertyCardSkeleton';
-import { usePropertiesByCity } from '@/features/home/hooks/usePropertiesByCity';
 
 const HOW_IT_WORKS = [
   {
@@ -79,12 +79,11 @@ const TESTIMONIALS = [
 
 export function HomePage() {
   const { data: stats, isLoading: statsLoading } = useHomeStats();
-  const { data: featured, isLoading: propertiesLoading } = useProperties({}, 1, 6);
   const { data: cities } = usePropertiesByCity();
+  const { data: featured, isLoading: propertiesLoading } = useProperties({}, 1, 6);
 
   return (
     <div className="flex flex-col overflow-hidden">
-      {/* Hero */}
       <section
         className="relative flex min-h-[85vh] items-center bg-cover bg-center"
         style={{
@@ -147,7 +146,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Stats */}
       <section className="border-b py-12">
         <div className="container grid grid-cols-1 gap-8 sm:grid-cols-3">
           {statsLoading ? (
@@ -182,7 +180,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* How it works */}
       <section className="border-b py-16">
         <div className="container">
           <AnimatedSection className="mb-10 text-center">
@@ -209,7 +206,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Featured properties */}
       <section className="py-16">
         <div className="container">
           <AnimatedSection className="mb-8 flex items-center justify-between">
@@ -236,7 +232,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Why PropertyFlow — with image */}
       <section className="border-y bg-muted/40 py-16">
         <div className="container grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
           <AnimatedSection>
@@ -269,7 +264,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
       <section className="py-16">
         <div className="container">
           <AnimatedSection className="mb-10 text-center">
@@ -295,7 +289,6 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
       <section
         className="relative bg-cover bg-center py-24"
         style={{
@@ -303,11 +296,12 @@ export function HomePage() {
             'linear-gradient(rgba(37,99,235,0.88), rgba(37,99,235,0.88)), url(https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1920&q=80)',
         }}
       >
-        <div className="container flex flex-col items-center gap-4 text-center">
+        <div className="container flex flex-col items-center gap-4 text-center text-white">
           <AnimatedSection>
-            <h2 className="text-h3 text-white">Are you a landlord or agency?</h2>
-
-            <p className="max-w-lg text-body text-white/90">
+            <h2 className="text-h3">Are you a landlord or agency?</h2>
+          </AnimatedSection>
+          <AnimatedSection delay={150}>
+            <p className="max-w-lg text-body opacity-90">
               Manage your entire property portfolio, collect rent online, and track everything in
               one dashboard.
             </p>
@@ -319,9 +313,7 @@ export function HomePage() {
               className="bg-white text-foreground hover:bg-white/90"
               asChild
             >
-              <Link to="/register" className="!text-black">
-                List Your Property
-              </Link>
+              <Link to="/register">List Your Property</Link>
             </Button>
           </AnimatedSection>
         </div>

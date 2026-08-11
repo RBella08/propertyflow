@@ -52,8 +52,37 @@ export function PlansPage() {
     (p) => p.price > 0 && p.duration_months === selectedDuration
   );
 
-  const handleSubscribe = async (planId: string, price: number, name: string) => {
+  const handleSubscribe = async (
+    planId: string,
+    price: number,
+    name: string,
+    propertyLimit: number
+  ) => {
     if (price === 0) return;
+
+    const { data: landlordRow } = await supabase
+      .from('landlords')
+      .select('id')
+      .eq('profile_id', profile!.id)
+      .single();
+
+    if (!landlordRow?.id) {
+      toast.error('Could not determine your landlord profile.');
+      return;
+    }
+
+    const { count } = await supabase
+      .from('properties')
+      .select('id', { count: 'exact', head: true })
+      .eq('landlord_id', landlordRow.id);
+
+    if ((count ?? 0) > propertyLimit) {
+      toast.error('This plan supports fewer properties than you currently have', {
+        description: `You have ${count} properties, but ${name} only supports ${propertyLimit}. Remove or archive some first, or choose a higher plan.`,
+      });
+      return;
+    }
+
     setSubscribing(planId);
     try {
       await openPaystackCheckout({
@@ -162,7 +191,7 @@ export function PlansPage() {
                 ))}
               </ul>
               <Button
-                onClick={() => handleSubscribe(plan.id, plan.price, plan.name)}
+                onClick={() => handleSubscribe(plan.id, plan.price, plan.name, plan.property_limit)}
                 disabled={myPlanId === plan.id}
                 loading={subscribing === plan.id}
                 className="w-full"

@@ -33,7 +33,16 @@ export async function insertNotificationWithPush(
   userId: string,
   title: string,
   message: string,
-  type: string
+  type:
+    | 'rent_reminder'
+    | 'payment_success'
+    | 'payment_failed'
+    | 'maintenance_update'
+    | 'lease_expiry'
+    | 'announcement'
+    | 'welcome'
+    | 'invoice_created'
+    | 'lease_terminated'
 ): Promise<void> {
   await supabase.from('notifications').insert({ user_id: userId, title, message, type });
 

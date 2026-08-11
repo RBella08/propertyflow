@@ -1,12 +1,12 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { verifyPaystackTransaction, generateReceiptNumber } from '../_shared/paystack.ts';
+import { sendPushFromEdge } from '../_shared/notify.ts';
 
 Deno.serve(async (req) => {
   const secretKey = Deno.env.get('PAYSTACK_SECRET_KEY')!;
   const signature = req.headers.get('x-paystack-signature');
   const rawBody = await req.text();
 
-  // Verify the request genuinely came from Paystack, not a spoofed caller.
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     'raw',
@@ -78,19 +78,13 @@ Deno.serve(async (req) => {
         .select('balance')
         .eq('id', invoiceId)
         .single();
-
       if (invoice) {
         const newBalance = Math.max(0, invoice.balance - amount);
-
         await supabase
           .from('invoices')
-          .update({
-            balance: newBalance,
-            status: newBalance === 0 ? 'paid' : 'partial',
-          })
+          .update({ balance: newBalance, status: newBalance === 0 ? 'paid' : 'partial' })
           .eq('id', invoiceId);
       }
-
       await supabase.from('receipts').insert({
         payment_id: payment.id,
         receipt_number: generateReceiptNumber(),
@@ -110,18 +104,31 @@ Deno.serve(async (req) => {
           .eq('id', tenant.profile_id)
           .single();
 
-        const { error: notificationError } = await supabase.from('notifications').insert({
+        const tenantTitle = 'Payment successful';
+        const tenantMessage = `Your payment of ₦${amount.toLocaleString()} was received successfully.`;
+
+        await supabase.from('notifications').insert({
           user_id: tenant.profile_id,
-          title: 'Payment successful',
-          message: `Your payment of ₦${amount.toLocaleString()} was received successfully.`,
+          title: tenantTitle,
+          message: tenantMessage,
           type: 'payment_success',
         });
+        await sendPushFromEdge(tenant.profile_id, tenantTitle, tenantMessage, '/tenant/payments');
 
-        if (notificationError) {
-          console.error('Webhook: failed to create notification:', notificationError.message);
+        if (profile?.email) {
+          try {
+            await supabase.functions.invoke('send-email', {
+              body: {
+                to: profile.email,
+                subject: 'Payment Received — PropertyFlow',
+                html: `<h2>Payment Received</h2><p>We've received your payment of <strong>₦${amount.toLocaleString()}</strong>. Thank you!</p>`,
+              },
+            });
+          } catch (emailError) {
+            console.error('Webhook: email sending failed:', emailError);
+          }
         }
 
-        // Notify the landlord/manager too
         try {
           const { data: invoiceRow } = await supabase
             .from('invoices')
@@ -161,12 +168,21 @@ Deno.serve(async (req) => {
               .eq('id', recipientProfileId)
               .single();
 
+            const landlordTitle = 'Rent payment received';
+            const landlordMessage = `A payment of ₦${amount.toLocaleString()} was received for ${propertyRow!.property_name}.`;
+
             await supabase.from('notifications').insert({
               user_id: recipientProfileId,
-              title: 'Rent payment received',
-              message: `A payment of ₦${amount.toLocaleString()} was received for ${propertyRow!.property_name}.`,
+              title: landlordTitle,
+              message: landlordMessage,
               type: 'payment_success',
             });
+            await sendPushFromEdge(
+              recipientProfileId,
+              landlordTitle,
+              landlordMessage,
+              '/landlord/payments'
+            );
 
             if (recipientProfile?.email) {
               await supabase.functions.invoke('send-email', {
@@ -179,21 +195,7 @@ Deno.serve(async (req) => {
             }
           }
         } catch (landlordNotifyError) {
-          console.error('Landlord payment notification failed:', landlordNotifyError);
-        }
-
-        if (profile?.email) {
-          try {
-            await supabase.functions.invoke('send-email', {
-              body: {
-                to: profile.email,
-                subject: 'Payment Received — PropertyFlow',
-                html: `<h2>Payment Received</h2><p>We've received your payment of <strong>₦${amount.toLocaleString()}</strong>. Thank you!</p>`,
-              },
-            });
-          } catch (emailError) {
-            console.error('Webhook: email sending failed:', emailError);
-          }
+          console.error('Webhook: landlord notification failed:', landlordNotifyError);
         }
       }
     }

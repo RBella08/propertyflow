@@ -23,9 +23,9 @@ import {
 } from '../hooks/useMessaging';
 import { VoiceRecorder } from './VoiceRecorder';
 import { VideoPicker } from './VideoPicker';
+import { useAuthContext } from '@/providers/AuthProvider';
 import { useLeaseOwnerPlanTier } from '@/features/plans/hooks/useLeaseOwnerPlan';
 import { hasFeatureAccess, FEATURE_MIN_TIER } from '@/features/plans/planFeatures';
-import { useAuthContext } from '@/providers/AuthProvider';
 
 const EDIT_WINDOW_MS = 20 * 60 * 1000;
 
@@ -43,14 +43,15 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
   const deleteForEveryone = useDeleteMessageForEveryone();
   const editMessage = useEditMessage();
   const { otherIsTyping, broadcastTyping } = useTypingIndicator(leaseId, profile?.id);
+  const { data: propertyOwnerTier } = useLeaseOwnerPlanTier(leaseId);
+
+  const canSendVideo = hasFeatureAccess(propertyOwnerTier ?? 'Free', 'chatVideo');
+  const canSendVoiceAndPhotos = hasFeatureAccess(propertyOwnerTier ?? 'Free', 'chatVoiceAndImages');
 
   const [body, setBody] = useState('');
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const { data: propertyOwnerTier } = useLeaseOwnerPlanTier(leaseId);
-  const canSendVideo = hasFeatureAccess(propertyOwnerTier ?? 'Free', 'chatVideo');
-  const canSendVoiceAndPhotos = hasFeatureAccess(propertyOwnerTier ?? 'Free', 'chatVoiceAndImages');
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; isMine: boolean } | null>(null);
   const [editTarget, setEditTarget] = useState<{ id: string; body: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -132,6 +133,7 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
               !m.deletedForEveryone &&
               Date.now() - new Date(m.createdAt).getTime() < EDIT_WINDOW_MS &&
               !m.audioUrl &&
+              !m.videoUrl &&
               images.length === 0;
 
             return (
@@ -165,8 +167,7 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
                       )}
                       {m.audioUrl && (
                         <audio src={m.audioUrl} controls className="h-8 max-w-full">
-                          {' '}
-                          <track kind="captions" />{' '}
+                          <track kind="captions" />
                         </audio>
                       )}
                       {m.videoUrl && (
@@ -274,7 +275,7 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
             variant="outline"
             size="icon"
             className="shrink-0 self-end opacity-50"
-            title={`Voice notes and photos require this landlord's plan to be ${FEATURE_MIN_TIER.chatVoiceAndImages} or higher`}
+            title={`Voice notes and photos require this conversation's landlord plan to be ${FEATURE_MIN_TIER.chatVoiceAndImages} or higher`}
             onClick={() =>
               toast.info(
                 `This conversation needs the ${FEATURE_MIN_TIER.chatVoiceAndImages} plan to unlock voice notes and photos`
@@ -284,6 +285,7 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
             <Lock className="h-4 w-4" />
           </Button>
         )}
+
         {canSendVideo ? (
           <VideoPicker onSelect={setVideoFile} />
         ) : (
@@ -292,14 +294,17 @@ export function ChatThread({ leaseId, counterpartProfileId, otherPersonName }: C
             variant="outline"
             size="icon"
             className="shrink-0 self-end opacity-50"
-            title={`Video messages require the ${FEATURE_MIN_TIER.chatVideo} plan or higher`}
+            title={`Video messages require this conversation's landlord plan to be ${FEATURE_MIN_TIER.chatVideo} or higher`}
             onClick={() =>
-              toast.info(`Upgrade to ${FEATURE_MIN_TIER.chatVideo} to send video messages`)
+              toast.info(
+                `This conversation needs the ${FEATURE_MIN_TIER.chatVideo} plan to unlock video messages`
+              )
             }
           >
             <Lock className="h-4 w-4" />
           </Button>
         )}
+
         <Textarea
           rows={2}
           placeholder="Type a message..."

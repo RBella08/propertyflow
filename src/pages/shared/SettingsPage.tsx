@@ -64,7 +64,7 @@ export function SettingsPage() {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(changePasswordSchema) });
+  } = useForm<ChangePasswordInput>({ resolver: zodResolver(changePasswordSchema) });
 
   const onSubmit = async (data: ChangePasswordInput) => {
     if (!user?.email) return;
@@ -80,8 +80,8 @@ export function SettingsPage() {
   };
 
   return (
-    <div>
-      <h1>Settings</h1>
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
+      <h1 className="text-h4 text-foreground">Settings</h1>
 
       <Card>
         <CardHeader>
@@ -147,7 +147,6 @@ export function SettingsPage() {
                 <p className="text-caption text-destructive">{errors.currentPassword.message}</p>
               )}
             </div>
-
             <div className="flex flex-col gap-2">
               <Label htmlFor="newPassword">New Password</Label>
               <PasswordInput
@@ -159,7 +158,6 @@ export function SettingsPage() {
                 <p className="text-caption text-destructive">{errors.newPassword.message}</p>
               )}
             </div>
-
             <div className="flex flex-col gap-2">
               <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
               <PasswordInput
@@ -171,7 +169,6 @@ export function SettingsPage() {
                 <p className="text-caption text-destructive">{errors.confirmNewPassword.message}</p>
               )}
             </div>
-
             <Button type="submit" loading={isSubmitting} className="w-fit">
               Update Password
             </Button>

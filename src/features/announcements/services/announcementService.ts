@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { notifyUser } from '@/lib/emailNotify';
 import type { AnnouncementFormInput } from '../schemas';
 
 export interface AnnouncementItem {
@@ -40,14 +41,13 @@ export async function createAnnouncement(
       .select('profile_id')
       .in('id', tenantIds);
 
-    if (tenants && tenants.length > 0) {
-      await supabase.from('notifications').insert(
-        tenants.map((t) => ({
-          user_id: t.profile_id,
-          title: `New announcement: ${input.title}`,
-          message: input.body,
-          type: 'announcement' as const,
-        }))
+    for (const t of tenants ?? []) {
+      await notifyUser(
+        t.profile_id,
+        `New announcement: ${input.title}`,
+        input.body,
+        'announcement',
+        '/tenant/announcements'
       );
     }
   } catch (notifyError) {
@@ -75,7 +75,7 @@ export async function getTenantAnnouncements(tenantId: string): Promise<Announce
     .from('leases')
     .select('unit_id')
     .eq('tenant_id', tenantId)
-    .eq('status', 'active');
+    .in('status', ['active', 'renewed']);
   const unitIds = (leases ?? []).map((l) => l.unit_id);
   if (unitIds.length === 0) return [];
 

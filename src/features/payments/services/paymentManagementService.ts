@@ -1,12 +1,7 @@
 import { supabase } from '@/lib/supabase';
-import { sendEmailToProfile } from '@/lib/emailNotify';
-import type { Database } from '@/types/database';
+import { sendEmailToProfile, notifyUser } from '@/lib/emailNotify';
 
-type PaymentStatus = Database['public']['Enums']['payment_status'];
-
-type InvoiceStatus = Database['public']['Enums']['invoice_status'];
-
-function computeInvoiceStatus(balance: number, amount: number): InvoiceStatus {
+function computeInvoiceStatus(balance: number, amount: number): 'pending' | 'paid' | 'partial' {
   if (balance <= 0) return 'paid';
   if (balance >= amount) return 'pending';
   return 'partial';
@@ -20,11 +15,11 @@ function generateReceiptNumber() {
 
 export async function updatePaymentStatus(
   reference: string,
-  newStatus: PaymentStatus
+  newStatus: 'pending' | 'processing' | 'successful' | 'failed' | 'refunded'
 ): Promise<void> {
   const { data: payment, error: paymentError } = await supabase
     .from('payments')
-    .select('id, status, amount, invoice_id')
+    .select('id, status, amount, invoice_id, tenant_id, reference')
     .eq('reference', reference)
     .single();
   if (paymentError) throw paymentError;
@@ -38,111 +33,86 @@ export async function updatePaymentStatus(
     .eq('reference', reference);
   if (updateError) throw updateError;
 
-  // No transition between "counts as paid" and "doesn't count as paid" —
-  // nothing more to reconcile (e.g. pending -> processing).
-  if (wasSuccessful === willBeSuccessful) return;
-
-  const { data: invoice, error: invoiceError } = await supabase
-    .from('invoices')
-    .select('id, amount, balance')
-    .eq('id', payment.invoice_id)
-    .single();
-  if (invoiceError) throw invoiceError;
-
-  let newBalance: number;
-  if (!wasSuccessful && willBeSuccessful) {
-    // Newly confirmed — reduce what's owed
-    newBalance = Math.max(0, invoice.balance - payment.amount);
-  } else {
-    // Reversed (refunded / marked failed after being successful) — restore what's owed
-    newBalance = Math.min(invoice.amount, invoice.balance + payment.amount);
-  }
-
-  const { error: invoiceUpdateError } = await supabase
-    .from('invoices')
-    .update({ balance: newBalance, status: computeInvoiceStatus(newBalance, invoice.amount) })
-    .eq('id', invoice.id);
-  if (invoiceUpdateError) throw invoiceUpdateError;
-
-  // Email the tenant on any status change, not just success
-  try {
-    const { data: paymentRow } = await supabase
-      .from('payments')
-      .select('tenant_id, reference')
-      .eq('id', payment.id)
+  if (wasSuccessful !== willBeSuccessful) {
+    const { data: invoice, error: invoiceError } = await supabase
+      .from('invoices')
+      .select('id, amount, balance')
+      .eq('id', payment.invoice_id)
       .single();
-    if (paymentRow) {
-      const { data: tenantRow } = await supabase
-        .from('tenants')
-        .select('profile_id')
-        .eq('id', paymentRow.tenant_id)
-        .single();
-      if (tenantRow) {
-        const statusLabels: Record<string, string> = {
-          pending: 'is now Pending',
-          processing: 'is Processing',
-          successful: 'was Confirmed',
-          failed: 'Failed',
-          refunded: 'was Refunded',
-        };
-        await sendEmailToProfile(
-          tenantRow.profile_id,
-          `Payment Update: ${paymentRow.reference} — PropertyFlow`,
-          `<p>Your payment (${paymentRow.reference}) of ₦${payment.amount.toLocaleString()} ${statusLabels[newStatus] ?? `is now ${newStatus}`}.</p>`
-        );
+    if (invoiceError) throw invoiceError;
+
+    let newBalance: number;
+    if (!wasSuccessful && willBeSuccessful) {
+      newBalance = Math.max(0, invoice.balance - payment.amount);
+    } else {
+      newBalance = Math.min(invoice.amount, invoice.balance + payment.amount);
+    }
+
+    const { error: invoiceUpdateError } = await supabase
+      .from('invoices')
+      .update({ balance: newBalance, status: computeInvoiceStatus(newBalance, invoice.amount) })
+      .eq('id', invoice.id);
+    if (invoiceUpdateError) throw invoiceUpdateError;
+
+    if (!wasSuccessful && willBeSuccessful) {
+      const { data: existingReceipt } = await supabase
+        .from('receipts')
+        .select('id')
+        .eq('payment_id', payment.id)
+        .maybeSingle();
+
+      if (!existingReceipt) {
+        await supabase.from('receipts').insert({
+          payment_id: payment.id,
+          receipt_number: generateReceiptNumber(),
+          issued_at: new Date().toISOString(),
+        });
       }
-    }
-  } catch (emailErr) {
-    console.error('Payment status email failed:', emailErr);
-  }
 
-  if (!wasSuccessful && willBeSuccessful) {
-    const { data: existingReceipt } = await supabase
-      .from('receipts')
-      .select('id')
-      .eq('payment_id', payment.id)
-      .maybeSingle();
-
-    if (!existingReceipt) {
-      await supabase.from('receipts').insert({
-        payment_id: payment.id,
-        receipt_number: generateReceiptNumber(),
-        issued_at: new Date().toISOString(),
-      });
-    }
-
-    // Notify the tenant, matching the online-payment experience
-    try {
-      const { data: paymentRow } = await supabase
-        .from('payments')
-        .select('tenant_id')
-        .eq('id', payment.id)
-        .single();
-
-      if (paymentRow) {
+      try {
         const { data: tenant } = await supabase
           .from('tenants')
           .select('profile_id')
-          .eq('id', paymentRow.tenant_id)
+          .eq('id', payment.tenant_id)
           .single();
 
         if (tenant) {
-          await supabase.from('notifications').insert({
-            user_id: tenant.profile_id,
-            title: 'Payment confirmed',
-            message: `Your payment of ₦${payment.amount.toLocaleString()} has been confirmed.`,
-            type: 'payment_success',
-          });
-
-          sendEmailToProfile(
+          await notifyUser(
             tenant.profile_id,
-            'Payment Confirmed — PropertyFlow',
-            `<p>Your payment of ₦${payment.amount.toLocaleString()} has been confirmed.</p>`
+            'Payment confirmed',
+            `Your payment of ₦${payment.amount.toLocaleString()} has been confirmed.`,
+            'payment_success',
+            '/tenant/payments'
           );
         }
+      } catch (notifyError) {
+        console.error('Failed to notify tenant of confirmed payment:', notifyError);
       }
-    } catch (notifyError) {
-      console.error('Failed to notify tenant of confirmed payment:', notifyError);
     }
+  }
+
+  // Email on every status change, not just success
+  try {
+    const { data: tenant } = await supabase
+      .from('tenants')
+      .select('profile_id')
+      .eq('id', payment.tenant_id)
+      .single();
+    if (tenant) {
+      const statusLabels: Record<string, string> = {
+        pending: 'is now Pending',
+        processing: 'is Processing',
+        successful: 'was Confirmed',
+        failed: 'Failed',
+        refunded: 'was Refunded',
+      };
+      await sendEmailToProfile(
+        tenant.profile_id,
+        `Payment Update: ${payment.reference} — PropertyFlow`,
+        `<p>Your payment (${payment.reference}) of ₦${payment.amount.toLocaleString()} ${statusLabels[newStatus] ?? `is now ${newStatus}`}.</p>`
+      );
+    }
+  } catch (emailErr) {
+    console.error('Payment status email failed:', emailErr);
   }
 }
