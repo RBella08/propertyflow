@@ -2,11 +2,26 @@ import * as React from 'react';
 
 import { cn } from '@/lib/utils';
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  /**
+   * Set true only for cards that are genuinely clickable (e.g. an entire
+   * card wrapped in a Link, or with its own onClick). Adds a subtle hover
+   * lift + shadow per the 2026 animation spec. Defaults to false so every
+   * existing static Card usage in the app is completely unaffected.
+   */
+  interactive?: boolean;
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, interactive = false, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn('rounded-xl border bg-card text-card-foreground shadow-card', className)}
+      className={cn(
+        'rounded-xl border bg-card text-card-foreground shadow-card',
+        interactive &&
+          'cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-dropdown',
+        className
+      )}
       {...props}
     />
   )
