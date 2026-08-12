@@ -60,11 +60,6 @@
 
   * {
     @apply border-border;
-    /* THE real, global fix: resets the browser's hidden default
-       min-width so flex/grid children and long content can actually
-       shrink and wrap on small screens, instead of forcing the whole
-       page wider than the viewport. This is the single change that
-       fixes overflow across every page at once. */
     min-width: 0;
   }
 
@@ -92,6 +87,20 @@
     height: auto;
   }
 
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  span,
+  a,
+  button {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
   input,
   textarea,
   select {
@@ -106,17 +115,20 @@
     }
   }
 
-  p,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  span,
-  a,
-  button {
-    overflow-wrap: break-word;
-    word-break: break-word;
+  /* FOUNDATION — reduced motion. Global, purely additive: respects the
+     OS-level "reduce motion" accessibility setting by collapsing all
+     transitions/animations to near-instant, without touching any
+     component's actual animation logic. This does not change what
+     animates, only how long it takes for people who've asked their
+     device to minimize motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

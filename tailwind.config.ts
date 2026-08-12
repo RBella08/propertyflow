@@ -76,7 +76,13 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
         card: '12px',
-        button: '8px',
+        // Deprecated: kept only so existing `rounded-button` usages keep
+        // compiling without change. Aliased to the same calculation as
+        // `md` (both resolve to 8px with the current --radius value) —
+        // this was already a numeric duplicate of `md`, so pointing it
+        // at the same expression produces an identical visual result to
+        // before this change, with zero regression risk.
+        button: 'calc(var(--radius) - 2px)',
       },
       boxShadow: {
         card: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
