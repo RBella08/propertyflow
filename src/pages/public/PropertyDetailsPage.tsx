@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router';
-import { MapPin, Bed, Bath } from 'lucide-react';
+import { MapPin, Bed, Bath, ExternalLink } from 'lucide-react';
 import { useProperty } from '@/features/properties/hooks/useProperty';
 import { PropertyGallery } from '@/features/properties/components/PropertyGallery';
 import { PropertyAmenities } from '@/features/properties/components/PropertyAmenities';
@@ -78,11 +78,11 @@ export function PropertyDetailsPage() {
           <h1 className="text-h3 text-foreground">{property.propertyName}</h1>
 
           <p className="mt-1 flex items-center gap-1 text-muted-foreground">
-            <MapPin className="h-4 w-4" />
+            <MapPin className="h-4 w-4 shrink-0" />
             {property.address}, {property.city}, {property.state}
           </p>
 
-          <div className="mt-6">
+          <div className="mt-8 border-t pt-6">
             <h2 className="text-h5 text-foreground">About this property</h2>
 
             <p className="mt-2 text-body text-muted-foreground">
@@ -90,13 +90,15 @@ export function PropertyDetailsPage() {
             </p>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-8 border-t pt-6">
             <h2 className="text-h5 text-foreground">Amenities</h2>
 
-            <PropertyAmenities amenities={property.amenities} />
+            <div className="mt-3">
+              <PropertyAmenities amenities={property.amenities} />
+            </div>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-8 border-t pt-6">
             <h2 className="text-h5 text-foreground">Available Units</h2>
 
             <div className="mt-3 flex flex-col gap-3">
@@ -117,7 +119,7 @@ export function PropertyDetailsPage() {
                       </span>
                     </div>
 
-                    <span className="font-semibold text-primary">
+                    <span className="font-semibold tabular-nums text-primary">
                       {formatNaira(unit.rentAmount)}/yr
                     </span>
                   </CardContent>
@@ -125,9 +127,11 @@ export function PropertyDetailsPage() {
               ))}
 
               {availableUnits.length === 0 && (
-                <p className="text-muted-foreground">
-                  No units currently available in this property.
-                </p>
+                <div className="flex flex-col items-center gap-1 rounded-card border py-10 text-center">
+                  <p className="text-small text-muted-foreground">
+                    No units currently available in this property.
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -136,14 +140,19 @@ export function PropertyDetailsPage() {
         <div>
           <Card className="sticky top-24">
             <CardContent className="flex flex-col gap-4 p-6">
-              <p className="text-small text-muted-foreground">Listed by {property.landlordName}</p>
-              {property.landlordVerified && <VerifiedBadge />}
+              <div>
+                <p className="text-small text-muted-foreground">
+                  Listed by {property.landlordName}
+                </p>
+                {property.landlordVerified && <VerifiedBadge />}
+              </div>
+
               <Badge variant="secondary" className="w-fit capitalize">
                 {property.propertyType}
               </Badge>
 
               {profile?.id !== property.landlordProfileId && (
-                <>
+                <div className="flex flex-col gap-2">
                   <Button asChild size="lg">
                     <Link to={`/inspection/${property.id}`}>Book Inspection</Link>
                   </Button>
@@ -151,7 +160,7 @@ export function PropertyDetailsPage() {
                   <Button variant="outline" size="lg" onClick={() => setContactOpen(true)}>
                     Contact Manager
                   </Button>
-                </>
+                </div>
               )}
 
               {property.latitude && property.longitude && (
@@ -159,9 +168,9 @@ export function PropertyDetailsPage() {
                   href={`https://www.openstreetmap.org/?mlat=${property.latitude}&mlon=${property.longitude}#map=16/${property.latitude}/${property.longitude}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-small text-primary hover:underline"
+                  className="flex items-center gap-1 text-small text-primary transition-opacity duration-150 hover:opacity-80 hover:underline"
                 >
-                  View on map
+                  View on map <ExternalLink className="h-3.5 w-3.5" />
                 </a>
               )}
             </CardContent>

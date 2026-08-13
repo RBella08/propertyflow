@@ -65,7 +65,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
       : '—';
 
   return (
-    <Card className="group overflow-hidden">
+    <Card interactive className="group overflow-hidden">
       <div className="relative aspect-video overflow-hidden bg-muted">
         {property.coverImage ? (
           <img
@@ -81,7 +81,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <button
           onClick={handleToggleFavorite}
           disabled={toggleFavorite.isPending}
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 text-foreground shadow-card transition-colors hover:text-destructive"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-background/90 text-foreground shadow-card transition-colors duration-150 hover:text-destructive"
           aria-label={isFavorited ? 'Remove from favorites' : 'Save property'}
         >
           <Heart className={cn('h-4 w-4', isFavorited && 'fill-destructive text-destructive')} />
@@ -97,12 +97,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
         )}
       </div>
       <CardContent className="flex flex-col gap-3 p-4">
-        <div>
+        <div className="min-w-0">
           <h3 className="line-clamp-1 text-h6 font-semibold text-foreground">
             {property.propertyName}
           </h3>
           <p className="flex items-center gap-1 text-small text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5" /> {property.city}, {property.state}
+            <MapPin className="h-3.5 w-3.5 shrink-0" /> {property.city}, {property.state}
           </p>
         </div>
         <div className="flex items-center gap-4 text-small text-muted-foreground">
@@ -111,8 +111,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </span>
           <span className="capitalize">{property.propertyType}</span>
         </div>
-        <div className="flex items-center justify-between pt-2">
-          <span className="text-body font-semibold text-primary">{priceLabel}</span>
+        <div className="flex items-center justify-between gap-2 border-t pt-3">
+          <span className="text-body font-semibold tabular-nums text-primary">{priceLabel}</span>
           <Button size="sm" asChild>
             <Link to={`/properties/${property.slug}`}>View Details</Link>
           </Button>

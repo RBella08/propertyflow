@@ -128,7 +128,7 @@ export function LandlordPropertiesPage() {
           {filtered.map((property) => (
             <Card key={property.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
-                <div className="flex items-center gap-4">
+                <div className="flex min-w-0 items-center gap-4">
                   <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md bg-muted">
                     {property.coverImage && (
                       <img
@@ -138,9 +138,9 @@ export function LandlordPropertiesPage() {
                       />
                     )}
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">{property.propertyName}</p>
-                    <p className="text-small text-muted-foreground">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-foreground">{property.propertyName}</p>
+                    <p className="truncate text-small text-muted-foreground">
                       {property.city}, {property.state} · {property.totalUnits} unit(s)
                     </p>
                     {property.managerId && (
@@ -148,10 +148,10 @@ export function LandlordPropertiesPage() {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-center gap-1">
                   <Badge
                     variant={statusVariant[property.status] ?? 'secondary'}
-                    className="capitalize"
+                    className="mr-1 capitalize"
                   >
                     {property.status}
                   </Badge>
@@ -221,7 +221,7 @@ export function LandlordPropertiesPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-destructive"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                     title="Delete permanently (only if no units exist)"
                     onClick={() =>
                       setDeleteTarget({ id: property.id, name: property.propertyName })
@@ -235,7 +235,7 @@ export function LandlordPropertiesPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-card border py-16 text-center">
           <p className="text-h5 text-foreground">No properties match your filters</p>
           <Button asChild>
             <Link to="/landlord/properties/new">
