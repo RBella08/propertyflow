@@ -69,6 +69,7 @@ export function LandlordMaintenancePage() {
 
   const handleAssignVendor = (requestId: string, vendorId: string) => {
     if (!vendorId) return;
+
     assignVendor.mutate(
       { requestId, vendorId },
       {
@@ -92,6 +93,7 @@ export function LandlordMaintenancePage() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-sm"
         />
+
         <div className="flex flex-wrap gap-2">
           {STATUS_FILTERS.map((status) => (
             <Button
@@ -116,9 +118,11 @@ export function LandlordMaintenancePage() {
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
                 <div>
                   <p className="font-medium text-foreground">{r.subject}</p>
+
                   <p className="text-small text-muted-foreground">
                     {r.propertyName} · Unit {r.unitNumber} · {r.tenantName}
                   </p>
+
                   <p className="text-caption capitalize text-muted-foreground">
                     {r.category.replace('_', ' ')} · {r.priority} priority
                   </p>
@@ -128,13 +132,14 @@ export function LandlordMaintenancePage() {
                   <MaintenanceStatusBadge status={r.status} />
 
                   <select
-                    className="h-8 rounded-md border border-input bg-background px-2 text-caption"
+                    className="h-9 min-w-[132px] cursor-pointer rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground shadow-sm outline-none transition-colors duration-150 hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
                     defaultValue=""
                     onChange={(e) => handleAssignVendor(r.id, e.target.value)}
                   >
                     <option value="" disabled>
                       Assign vendor
                     </option>
+
                     {(vendors ?? []).map((v) => (
                       <option key={v.id} value={v.id}>
                         {v.name}
