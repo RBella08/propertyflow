@@ -7,6 +7,8 @@ interface StatsCardProps {
   value: string;
   icon: LucideIcon;
   tone?: 'default' | 'success' | 'warning' | 'destructive';
+  /** Optional muted supporting line under the value (e.g. "vs last month"). */
+  subtitle?: string;
 }
 
 const toneStyles = {
@@ -16,7 +18,13 @@ const toneStyles = {
   destructive: 'bg-destructive/10 text-destructive',
 };
 
-export function StatsCard({ title, value, icon: Icon, tone = 'default' }: StatsCardProps) {
+export function StatsCard({
+  title,
+  value,
+  icon: Icon,
+  tone = 'default',
+  subtitle,
+}: StatsCardProps) {
   return (
     <Card>
       <CardContent className="flex items-center gap-4 p-5">
@@ -28,9 +36,10 @@ export function StatsCard({ title, value, icon: Icon, tone = 'default' }: StatsC
         >
           <Icon className="h-6 w-6" />
         </div>
-        <div>
-          <p className="text-small text-muted-foreground">{title}</p>
-          <p className="text-h5 font-semibold text-foreground">{value}</p>
+        <div className="min-w-0">
+          <p className="text-small font-medium text-muted-foreground">{title}</p>
+          <p className="text-h5 font-semibold tabular-nums text-foreground">{value}</p>
+          {subtitle && <p className="text-caption text-muted-foreground">{subtitle}</p>}
         </div>
       </CardContent>
     </Card>

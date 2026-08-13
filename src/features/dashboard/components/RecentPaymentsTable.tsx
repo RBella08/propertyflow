@@ -1,3 +1,4 @@
+import { Wallet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { RecentPayment } from '../services/tenantDashboardService';
@@ -30,17 +31,22 @@ export function RecentPaymentsTable({ payments }: RecentPaymentsTableProps) {
       </CardHeader>
       <CardContent>
         {payments.length === 0 ? (
-          <p className="text-muted-foreground">No payments yet.</p>
+          <div className="flex flex-col items-center gap-2 py-8 text-center">
+            <Wallet className="h-8 w-8 text-muted-foreground" />
+            <p className="text-small text-muted-foreground">No payments yet.</p>
+          </div>
         ) : (
           <div className="flex flex-col divide-y">
             {payments.map((payment) => (
               <div key={payment.id} className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-small font-medium text-foreground">{payment.reference}</p>
+                <div className="min-w-0">
+                  <p className="truncate text-small font-medium text-foreground">
+                    {payment.reference}
+                  </p>
                   <p className="text-caption capitalize text-muted-foreground">{payment.gateway}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-small font-semibold text-foreground">
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="text-small font-semibold tabular-nums text-foreground">
                     {formatNaira(payment.amount)}
                   </span>
                   <Badge

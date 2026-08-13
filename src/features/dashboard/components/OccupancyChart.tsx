@@ -39,12 +39,15 @@ export function OccupancyChart({ data, occupancyRate }: OccupancyChartProps) {
                     backgroundColor: 'hsl(var(--popover))',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
+                    color: 'hsl(var(--popover-foreground))',
                   }}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ color: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
               </PieChart>
             </ResponsiveContainer>
-            <p className="text-h5 font-semibold text-foreground">{occupancyRate}% occupied</p>
+            <p className="text-h5 font-semibold tabular-nums text-foreground">
+              {occupancyRate}% occupied
+            </p>
           </>
         ) : (
           <p className="text-muted-foreground">No units yet.</p>

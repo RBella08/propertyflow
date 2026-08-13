@@ -22,8 +22,7 @@ export function LandlordDashboardPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-          <PayoutSetupBanner />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
@@ -44,6 +43,8 @@ export function LandlordDashboardPage() {
         <h1 className="text-h4 text-foreground">Portfolio Overview</h1>
         <p className="text-muted-foreground">A snapshot of your properties and revenue.</p>
       </div>
+
+      <PayoutSetupBanner />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard title="Properties" value={String(data.totalProperties)} icon={Building2} />
