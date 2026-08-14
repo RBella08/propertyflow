@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { Wrench } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,9 @@ const STATUS_FILTERS = [
   'completed',
   'closed',
 ] as const;
+
+const SELECT_CLASSES =
+  'h-9 min-w-[132px] cursor-pointer rounded-md border border-input bg-card px-3 text-sm font-medium text-foreground shadow-sm outline-none transition-colors duration-150 hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 
 export function LandlordMaintenancePage() {
   const { data: requests, isLoading } = useLandlordMaintenanceRequests();
@@ -110,16 +114,19 @@ export function LandlordMaintenancePage() {
       </div>
 
       {isLoading ? (
-        <Skeleton className="h-40" />
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
       ) : filtered && filtered.length > 0 ? (
         <div className="flex flex-col gap-3">
           {filtered.map((r) => (
             <Card key={r.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
-                <div>
-                  <p className="font-medium text-foreground">{r.subject}</p>
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground">{r.subject}</p>
 
-                  <p className="text-small text-muted-foreground">
+                  <p className="truncate text-small text-muted-foreground">
                     {r.propertyName} · Unit {r.unitNumber} · {r.tenantName}
                   </p>
 
@@ -128,11 +135,11 @@ export function LandlordMaintenancePage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <MaintenanceStatusBadge status={r.status} />
 
                   <select
-                    className="h-9 min-w-[132px] cursor-pointer rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground shadow-sm outline-none transition-colors duration-150 hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    className={SELECT_CLASSES}
                     defaultValue=""
                     onChange={(e) => handleAssignVendor(r.id, e.target.value)}
                   >
@@ -162,7 +169,10 @@ export function LandlordMaintenancePage() {
           ))}
         </div>
       ) : (
-        <p className="text-muted-foreground">No maintenance requests match your filters.</p>
+        <div className="flex flex-col items-center gap-3 rounded-card border py-16 text-center">
+          <Wrench className="h-8 w-8 text-muted-foreground" />
+          <p className="text-h5 text-foreground">No maintenance requests match your filters</p>
+        </div>
       )}
     </div>
   );

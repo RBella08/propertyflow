@@ -74,7 +74,7 @@ export function InspectionBookingPage() {
           <CardTitle className="text-h4">Book an Inspection</CardTitle>
           {property && (
             <CardDescription className="flex items-center gap-1">
-              <MapPin className="h-3.5 w-3.5" /> {property.propertyName} — {property.city},{' '}
+              <MapPin className="h-3.5 w-3.5 shrink-0" /> {property.propertyName} — {property.city},{' '}
               {property.state}
             </CardDescription>
           )}
@@ -88,7 +88,7 @@ export function InspectionBookingPage() {
                 <p className="text-caption text-destructive">{errors.visitorName.message}</p>
               )}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="phone">Phone</Label>
                 <Input id="phone" {...register('phone')} error={!!errors.phone} />
@@ -104,7 +104,7 @@ export function InspectionBookingPage() {
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="preferredDate">Preferred Date</Label>
                 <Input

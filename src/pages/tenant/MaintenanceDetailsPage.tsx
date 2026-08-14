@@ -1,4 +1,5 @@
-import { useParams } from 'react-router';
+import { useParams, Link } from 'react-router';
+import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMaintenanceDetail } from '@/features/maintenance/hooks/useMaintenance';
@@ -8,11 +9,27 @@ export function MaintenanceDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const { data, isLoading, isError } = useMaintenanceDetail(id);
 
-  if (isLoading) return <Skeleton className="h-64" />;
+  if (isLoading) {
+    return (
+      <div className="mx-auto flex max-w-2xl flex-col gap-6">
+        <Skeleton className="h-8 w-2/3" />
+        <Skeleton className="h-24" />
+        <Skeleton className="h-32" />
+      </div>
+    );
+  }
+
   if (isError || !data) return <p className="text-destructive">Couldn&apos;t load this request.</p>;
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
+      <Link
+        to="/tenant/maintenance"
+        className="flex w-fit items-center gap-1 text-small text-muted-foreground transition-colors duration-150 hover:text-foreground"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" /> Back to Maintenance
+      </Link>
+
       <div>
         <h1 className="text-h4 text-foreground">{data.subject}</h1>
         <p className="text-small capitalize text-muted-foreground">
@@ -22,7 +39,7 @@ export function MaintenanceDetailsPage() {
       </div>
 
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="overflow-x-auto p-6">
           <MaintenanceStatusTimeline status={data.status} />
         </CardContent>
       </Card>

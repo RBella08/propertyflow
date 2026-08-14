@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { Plus } from 'lucide-react';
+import { Plus, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -51,27 +51,33 @@ export function TenantMaintenancePage() {
       </div>
 
       {isLoading ? (
-        <Skeleton className="h-40" />
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-20" />
+          <Skeleton className="h-20" />
+        </div>
       ) : filtered && filtered.length > 0 ? (
         <div className="flex flex-col gap-3">
           {filtered.map((r) => (
-            <Link key={r.id} to={`/tenant/maintenance/${r.id}`}>
-              <Card className="transition-colors hover:bg-accent">
-                <CardContent className="flex items-center justify-between p-4">
-                  <div>
-                    <p className="font-medium text-foreground">{r.subject}</p>
+            <Link key={r.id} to={`/tenant/maintenance/${r.id}`} className="block">
+              <Card interactive>
+                <CardContent className="flex items-center justify-between gap-3 p-4">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-foreground">{r.subject}</p>
                     <p className="text-small capitalize text-muted-foreground">
                       {r.category.replace('_', ' ')} · {r.priority} priority
                     </p>
                   </div>
-                  <MaintenanceStatusBadge status={r.status} />
+                  <div className="shrink-0">
+                    <MaintenanceStatusBadge status={r.status} />
+                  </div>
                 </CardContent>
               </Card>
             </Link>
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-card border py-16 text-center">
+          <Wrench className="h-8 w-8 text-muted-foreground" />
           <p className="text-h5 text-foreground">No requests match this filter</p>
           <Button asChild>
             <Link to="/tenant/maintenance/new">
