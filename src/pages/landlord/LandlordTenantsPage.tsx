@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { Mail, Phone, FileCheck, FileSignature, Wallet, MessageSquare } from 'lucide-react';
+import { Mail, Phone, FileCheck, FileSignature, Wallet, MessageSquare, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ import { LeaveScreeningReviewDialog } from '@/features/screening/components/Leav
 import { ViewAgreementDialog } from '@/features/agreements/components/ViewAgreementDialog';
 import { useMyPlan } from '@/features/plans/hooks/useMyPlan';
 import { hasFeatureAccess } from '@/features/plans/planFeatures';
+
 const statusVariant: Record<string, 'success' | 'secondary' | 'warning' | 'destructive'> = {
   active: 'success',
   renewed: 'success',
@@ -48,6 +50,20 @@ export function LandlordTenantsPage() {
     const matchesStatus = statusFilter === 'all' || t.leaseStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  const canScreenTenants = !myPlan || hasFeatureAccess(myPlan, 'tenantScreening');
+
+  const handleLeaveReviewClick = (t: {
+    leaseId: string;
+    tenantProfileId: string;
+    fullName: string;
+  }) => {
+    if (!canScreenTenants) {
+      toast.info('Upgrade your plan to leave tenant screening reviews');
+      return;
+    }
+    setReviewTarget({ leaseId: t.leaseId, tenantProfileId: t.tenantProfileId, name: t.fullName });
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -85,24 +101,25 @@ export function LandlordTenantsPage() {
           {filtered.map((t) => (
             <Card key={t.tenantId}>
               <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-medium text-foreground">{t.fullName}</p>
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground">{t.fullName}</p>
                   <p className="flex flex-wrap items-center gap-3 text-small text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Mail className="h-3.5 w-3.5" /> {t.email}
+                      <Mail className="h-3.5 w-3.5 shrink-0" />{' '}
+                      <span className="truncate">{t.email}</span>
                     </span>
                     {t.phone && (
                       <span className="flex items-center gap-1">
-                        <Phone className="h-3.5 w-3.5" /> {t.phone}
+                        <Phone className="h-3.5 w-3.5 shrink-0" /> {t.phone}
                       </span>
                     )}
                   </p>
-                  <p className="text-caption text-muted-foreground">
+                  <p className="truncate text-caption text-muted-foreground">
                     {t.propertyName} · Unit {t.unitNumber}
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <Badge
                     variant={statusVariant[t.leaseStatus] ?? 'secondary'}
                     className="capitalize"
@@ -145,18 +162,10 @@ export function LandlordTenantsPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => {
-                        if (myPlan && !hasFeatureAccess(myPlan, 'tenantScreening')) {
-                          return;
-                        }
-
-                        setReviewTarget({
-                          leaseId: t.leaseId,
-                          tenantProfileId: t.tenantProfileId,
-                          name: t.fullName,
-                        });
-                      }}
+                      title={!canScreenTenants ? 'Upgrade your plan to unlock this' : undefined}
+                      onClick={() => handleLeaveReviewClick(t)}
                     >
+                      {!canScreenTenants && <Lock className="mr-1.5 h-3.5 w-3.5" />}
                       Leave Review
                     </Button>
                   )}
@@ -166,7 +175,10 @@ export function LandlordTenantsPage() {
           ))}
         </div>
       ) : (
-        <p className="text-muted-foreground">No tenants match your filters.</p>
+        <div className="flex flex-col items-center gap-3 rounded-card border py-16 text-center">
+          <p className="text-h5 text-foreground">No tenants match your filters</p>
+          <p className="text-muted-foreground">Try adjusting your search or status filter.</p>
+        </div>
       )}
 
       {paymentTarget && (

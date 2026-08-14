@@ -45,23 +45,25 @@ export function LandlordLeasesPage() {
           <h1 className="text-h4 text-foreground">Leases</h1>
           <p className="text-muted-foreground">Manage tenant lease agreements.</p>
         </div>
-        <Button asChild>
-          <Link to="/landlord/leases/new">
-            <Plus className="mr-2 h-4 w-4" /> Create Lease
-          </Link>
-        </Button>
-        <div className="flex gap-2">
-          {(['active', 'terminated', 'all'] as const).map((status) => (
-            <Button
-              key={status}
-              size="sm"
-              variant={statusFilter === status ? 'default' : 'outline'}
-              onClick={() => setStatusFilter(status)}
-              className="capitalize"
-            >
-              {status}
-            </Button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-2">
+            {(['active', 'terminated', 'all'] as const).map((status) => (
+              <Button
+                key={status}
+                size="sm"
+                variant={statusFilter === status ? 'default' : 'outline'}
+                onClick={() => setStatusFilter(status)}
+                className="capitalize"
+              >
+                {status}
+              </Button>
+            ))}
+          </div>
+          <Button asChild>
+            <Link to="/landlord/leases/new">
+              <Plus className="mr-2 h-4 w-4" /> Create Lease
+            </Link>
+          </Button>
         </div>
       </div>
 
@@ -70,30 +72,31 @@ export function LandlordLeasesPage() {
           <Skeleton className="h-20" />
           <Skeleton className="h-20" />
         </div>
-      ) : leases && leases.length > 0 ? (
+      ) : filteredLeases && filteredLeases.length > 0 ? (
         <div className="flex flex-col gap-3">
-          {filteredLeases?.map((lease) => (
+          {filteredLeases.map((lease) => (
             <Card key={lease.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
-                <div>
-                  <p className="font-medium text-foreground">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground">
                     {lease.leaseNumber} — {lease.tenantName}
                   </p>
-                  <p className="text-small text-muted-foreground">
+                  <p className="truncate text-small text-muted-foreground">
                     {lease.propertyName} · Unit {lease.unitNumber} ·{' '}
-                    {formatNaira(lease.monthlyRent)}/yr
+                    <span className="tabular-nums">{formatNaira(lease.monthlyRent)}/yr</span>
                   </p>
                   <p className="text-caption text-muted-foreground">
                     {lease.startDate} → {lease.endDate}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <LeaseStatusBadge status={lease.status} />
                   {lease.status !== 'terminated' && (
                     <>
                       <Button
                         size="sm"
                         variant="ghost"
+                        title="Renew lease"
                         onClick={() =>
                           setRenewTarget({
                             id: lease.id,
@@ -107,7 +110,8 @@ export function LandlordLeasesPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-destructive"
+                        title="Terminate lease"
+                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                         onClick={() =>
                           setTerminateTarget({ id: lease.id, number: lease.leaseNumber })
                         }
@@ -128,9 +132,15 @@ export function LandlordLeasesPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
-          <p className="text-h5 text-foreground">No leases yet</p>
-          <p className="text-muted-foreground">Create a lease to assign a tenant to a unit.</p>
+        <div className="flex flex-col items-center gap-3 rounded-card border py-16 text-center">
+          <p className="text-h5 text-foreground">
+            {leases && leases.length > 0 ? 'No leases match this filter' : 'No leases yet'}
+          </p>
+          <p className="text-muted-foreground">
+            {leases && leases.length > 0
+              ? 'Try a different status tab above.'
+              : 'Create a lease to assign a tenant to a unit.'}
+          </p>
           <Button asChild>
             <Link to="/landlord/leases/new">
               <Plus className="mr-2 h-4 w-4" /> Create Lease

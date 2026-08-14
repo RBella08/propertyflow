@@ -79,21 +79,21 @@ export function LandlordUnitsPage() {
           {filtered.map((unit) => (
             <Card key={unit.id}>
               <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
-                <div>
-                  <p className="font-medium text-foreground">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground">
                     {unit.propertyName} — Unit {unit.unitNumber}
                   </p>
-                  <div className="flex items-center gap-3 text-small text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-3 text-small text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Bed className="h-3.5 w-3.5" /> {unit.bedrooms}
                     </span>
                     <span className="flex items-center gap-1">
                       <Bath className="h-3.5 w-3.5" /> {unit.bathrooms}
                     </span>
-                    <span>{formatNaira(unit.rentAmount)}/yr</span>
+                    <span className="tabular-nums">{formatNaira(unit.rentAmount)}/yr</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   <UnitStatusBadge status={unit.status} />
                   <Button size="sm" variant="ghost" title="Edit unit" asChild>
                     <Link to={`/landlord/units/${unit.id}/edit`}>
@@ -106,7 +106,7 @@ export function LandlordUnitsPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-3 py-16 text-center">
+        <div className="flex flex-col items-center gap-3 rounded-card border py-16 text-center">
           <p className="text-h5 text-foreground">No units match your filters</p>
           <Button asChild>
             <Link to="/landlord/units/new">
