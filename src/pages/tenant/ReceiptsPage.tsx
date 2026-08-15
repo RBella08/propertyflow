@@ -1,4 +1,4 @@
-import { Download } from 'lucide-react';
+import { Download, Receipt as ReceiptIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,23 +23,28 @@ export function ReceiptsPage() {
         <p className="text-muted-foreground">Download a PDF receipt for any completed payment.</p>
       </div>
       {isLoading ? (
-        <Skeleton className="h-40" />
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-20" />
+          <Skeleton className="h-20" />
+        </div>
       ) : receipts && receipts.length > 0 ? (
         <div className="flex flex-col gap-3">
           {receipts.map((r) => (
             <Card key={r.id}>
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
-                  <p className="font-medium text-foreground">{r.receiptNumber}</p>
-                  <p className="text-small text-muted-foreground">
+              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground">{r.receiptNumber}</p>
+                  <p className="truncate text-small text-muted-foreground">
                     {r.propertyName} · Unit {r.unitNumber}
                   </p>
                   <p className="text-caption text-muted-foreground">
                     {new Date(r.issuedAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-semibold text-foreground">{formatNaira(r.amount)}</span>
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="font-semibold tabular-nums text-foreground">
+                    {formatNaira(r.amount)}
+                  </span>
                   <Button size="sm" variant="outline" onClick={() => exportReceiptPDF(r)}>
                     <Download className="mr-1.5 h-3.5 w-3.5" /> Download
                   </Button>
@@ -49,7 +54,13 @@ export function ReceiptsPage() {
           ))}
         </div>
       ) : (
-        <p className="text-muted-foreground">No receipts yet.</p>
+        <div className="flex flex-col items-center gap-3 rounded-card border py-16 text-center">
+          <ReceiptIcon className="h-8 w-8 text-muted-foreground" />
+          <p className="text-h5 text-foreground">No receipts yet</p>
+          <p className="text-muted-foreground">
+            Receipts appear here automatically after a successful payment.
+          </p>
+        </div>
       )}
     </div>
   );

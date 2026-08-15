@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -89,7 +89,8 @@ export function PayRentPage() {
 
       {verifying && (
         <div className="flex items-center gap-2 rounded-md border bg-accent p-4 text-small">
-          <Loader2 className="h-4 w-4 animate-spin" /> Verifying your payment, please wait...
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> Verifying your payment, please
+          wait...
         </div>
       )}
 
@@ -97,15 +98,15 @@ export function PayRentPage() {
         <div className="flex flex-col gap-3">
           {invoices.map((invoice) => (
             <Card key={invoice.id}>
-              <CardContent className="flex flex-wrap items-center justify-between gap-4 p-4">
-                <div>
-                  <p className="font-medium text-foreground">{invoice.invoiceNumber}</p>
+              <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground">{invoice.invoiceNumber}</p>
                   <p className="text-small text-muted-foreground">
                     {invoice.billingPeriod} · Due {invoice.dueDate}
                   </p>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-h6 font-semibold text-primary">
+                <div className="flex shrink-0 items-center gap-4">
+                  <span className="text-h6 font-semibold tabular-nums text-primary">
                     {formatNaira(invoice.balance)}
                   </span>
                   <Button
@@ -121,7 +122,8 @@ export function PayRentPage() {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-2 py-16 text-center">
+        <div className="flex flex-col items-center gap-2 rounded-card border py-16 text-center">
+          <Wallet className="h-8 w-8 text-muted-foreground" />
           <p className="text-h5 text-foreground">You&apos;re all caught up!</p>
           <p className="text-muted-foreground">No outstanding invoices right now.</p>
         </div>

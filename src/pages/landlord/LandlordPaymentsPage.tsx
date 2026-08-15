@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { Wallet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,6 +37,9 @@ const statusVariant: Record<string, 'success' | 'warning' | 'destructive' | 'sec
 
 const STATUS_FILTERS = ['all', 'successful', 'pending', 'failed', 'refunded'] as const;
 const ALL_STATUSES = ['pending', 'processing', 'successful', 'failed', 'refunded'];
+
+const SELECT_CLASSES =
+  'h-9 cursor-pointer rounded-md border border-input bg-card px-2 text-small font-medium capitalize text-foreground shadow-sm outline-none transition-colors duration-150 hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background';
 
 export function LandlordPaymentsPage() {
   const [startDate, setStartDate] = useState(getDefaultStartDate());
@@ -104,27 +108,30 @@ export function LandlordPaymentsPage() {
       </div>
 
       {isLoading ? (
-        <Skeleton className="h-64" />
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-20" />
+          <Skeleton className="h-20" />
+        </div>
       ) : filtered && filtered.length > 0 ? (
         <div className="flex flex-col gap-3">
           {filtered.map((p) => (
             <Card key={p.reference}>
-              <CardContent className="flex flex-wrap items-center justify-between gap-2 p-4">
-                <div>
-                  <p className="text-small font-medium text-foreground">{p.tenantName}</p>
-                  <p className="text-caption text-muted-foreground">
+              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="truncate text-small font-medium text-foreground">{p.tenantName}</p>
+                  <p className="truncate text-caption text-muted-foreground">
                     {p.propertyName} · {p.reference}
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-small font-semibold text-foreground">
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="text-small font-semibold tabular-nums text-foreground">
                     {formatNaira(p.amount)}
                   </span>
                   <Badge variant={statusVariant[p.status] ?? 'secondary'} className="capitalize">
                     {p.status}
                   </Badge>
                   <select
-                    className="h-9 rounded-md border border-input bg-background px-2 text-small capitalize"
+                    className={SELECT_CLASSES}
                     value={p.status}
                     onChange={(e) =>
                       handleChange(
@@ -146,7 +153,10 @@ export function LandlordPaymentsPage() {
           ))}
         </div>
       ) : (
-        <p className="text-muted-foreground">No payments match your filters.</p>
+        <div className="flex flex-col items-center gap-3 rounded-card border py-16 text-center">
+          <Wallet className="h-8 w-8 text-muted-foreground" />
+          <p className="text-h5 text-foreground">No payments match your filters</p>
+        </div>
       )}
     </div>
   );

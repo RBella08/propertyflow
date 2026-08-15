@@ -32,6 +32,9 @@ function formatNaira(amount: number) {
   }).format(amount);
 }
 
+const SELECT_CLASSES =
+  'flex h-10 w-full cursor-pointer rounded-md border border-input bg-card px-3 py-2 text-sm text-foreground shadow-sm outline-none transition-colors duration-150 hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50';
+
 export function RecordPaymentDialog({
   open,
   onClose,
@@ -100,7 +103,7 @@ export function RecordPaymentDialog({
               value={invoiceId}
               onChange={(e) => handleInvoiceChange(e.target.value)}
               disabled={isLoading}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className={SELECT_CLASSES}
             >
               <option value="">Select an invoice...</option>
               {(invoices ?? []).map((inv) => (
